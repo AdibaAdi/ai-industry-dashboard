@@ -1,25 +1,93 @@
-const companies = [
-  { name: 'OpenAI', domain: 'Generative AI', growthScore: 98.7, influenceScore: 99.1 },
-  { name: 'Anthropic', domain: 'Foundation Models', growthScore: 96.2, influenceScore: 95.8 },
-  { name: 'NVIDIA', domain: 'Infrastructure', growthScore: 94.9, influenceScore: 98.4 },
-  { name: 'Scale AI', domain: 'Data Platforms', growthScore: 90.3, influenceScore: 89.7 },
-  { name: 'Cohere', domain: 'Enterprise LLMs', growthScore: 88.6, influenceScore: 86.9 },
-  { name: 'Mistral AI', domain: 'Open-weight Models', growthScore: 89.8, influenceScore: 87.5 },
+import { useMemo, useState } from 'react';
+import SectionHeading from '../components/SectionHeading';
+import { companies } from '../data/companies';
+
+const sortOptions = [
+  { key: 'growthScore-desc', label: 'Growth: High to low' },
+  { key: 'growthScore-asc', label: 'Growth: Low to high' },
+  { key: 'influenceScore-desc', label: 'Influence: High to low' },
+  { key: 'influenceScore-asc', label: 'Influence: Low to high' },
 ];
 
-const CompaniesPage = () => {
+const CompaniesPage = ({ compactMode }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [domainFilter, setDomainFilter] = useState('All domains');
+  const [sortBy, setSortBy] = useState(sortOptions[0].key);
+
+  const domains = useMemo(
+    () => ['All domains', ...new Set(companies.map((company) => company.domain))],
+    [],
+  );
+
+  const filteredCompanies = useMemo(() => {
+    const [field, direction] = sortBy.split('-');
+
+    return companies
+      .filter((company) =>
+        company.name.toLowerCase().includes(searchTerm.toLowerCase().trim()),
+      )
+      .filter((company) => (domainFilter === 'All domains' ? true : company.domain === domainFilter))
+      .sort((a, b) => (direction === 'desc' ? b[field] - a[field] : a[field] - b[field]));
+  }, [domainFilter, searchTerm, sortBy]);
+
   return (
-    <main className="flex-1 space-y-6 p-6">
-      <section className="rounded-2xl border border-dashboard-border bg-dashboard-card p-5 shadow-card">
-        <h1 className="text-xl font-semibold text-slate-100">Companies</h1>
-        <p className="mt-1 text-sm text-dashboard-muted">Mock AI company performance and influence overview.</p>
+    <main className={`space-y-6 p-6 ${compactMode ? 'space-y-4 p-4' : ''}`}>
+      <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
+        <SectionHeading
+          title="Companies"
+          subtitle="Search, segment, and benchmark high-momentum AI companies across domains."
+        />
+
+        <div className="grid gap-3 md:grid-cols-3">
+          <label className="text-sm text-theme-muted">
+            Search
+            <input
+              type="search"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search by company name"
+              className="mt-1 w-full rounded-lg border border-theme-border bg-theme-chart px-3 py-2 text-theme-primary outline-none ring-theme-accent/50 focus:ring"
+            />
+          </label>
+          <label className="text-sm text-theme-muted">
+            Domain
+            <select
+              value={domainFilter}
+              onChange={(event) => setDomainFilter(event.target.value)}
+              className="mt-1 w-full rounded-lg border border-theme-border bg-theme-chart px-3 py-2 text-theme-primary outline-none ring-theme-accent/50 focus:ring"
+            >
+              {domains.map((domain) => (
+                <option key={domain} value={domain}>
+                  {domain}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="text-sm text-theme-muted">
+            Sort by
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+              className="mt-1 w-full rounded-lg border border-theme-border bg-theme-chart px-3 py-2 text-theme-primary outline-none ring-theme-accent/50 focus:ring"
+            >
+              {sortOptions.map((option) => (
+                <option key={option.key} value={option.key}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </section>
 
-      <section className="rounded-2xl border border-dashboard-border bg-dashboard-card p-5 shadow-card">
+      <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
+        <p className="mb-3 text-sm text-theme-muted">
+          Showing <span className="font-semibold text-theme-primary">{filteredCompanies.length}</span> companies
+        </p>
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-700/50 text-left text-dashboard-muted">
+              <tr className="border-b border-theme-border text-left text-theme-muted">
                 <th className="pb-3 font-medium">Name</th>
                 <th className="pb-3 font-medium">Domain</th>
                 <th className="pb-3 font-medium">Growth Score</th>
@@ -27,12 +95,12 @@ const CompaniesPage = () => {
               </tr>
             </thead>
             <tbody>
-              {companies.map((company) => (
-                <tr key={company.name} className="border-b border-slate-800/80 text-slate-200 last:border-b-0">
-                  <td className="py-3 font-medium">{company.name}</td>
+              {filteredCompanies.map((company) => (
+                <tr key={company.name} className="border-b border-theme-border text-theme-secondary last:border-b-0">
+                  <td className="py-3 font-medium text-theme-primary">{company.name}</td>
                   <td className="py-3">{company.domain}</td>
-                  <td className="py-3 text-emerald-300">{company.growthScore}</td>
-                  <td className="py-3 text-cyan-300">{company.influenceScore}</td>
+                  <td className="py-3 text-emerald-400">{company.growthScore.toFixed(1)}</td>
+                  <td className="py-3 text-cyan-400">{company.influenceScore.toFixed(1)}</td>
                 </tr>
               ))}
             </tbody>

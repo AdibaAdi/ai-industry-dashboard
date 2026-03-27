@@ -4,8 +4,6 @@
 
 :root {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  color: #e2e8f0;
-  background-color: #020617;
 }
 
 * {
@@ -15,5 +13,99 @@
 body {
   margin: 0;
   min-height: 100vh;
-  background: radial-gradient(circle at top, #0f172a, #020617 60%);
+}
+
+.app-shell {
+  background: var(--theme-bg);
+  color: var(--theme-primary);
+}
+
+.theme-dark {
+  --theme-bg: radial-gradient(circle at top, #0f172a, #020617 60%);
+  --theme-card: #0f172a;
+  --theme-sidebar: rgba(2, 6, 23, 0.65);
+  --theme-header: rgba(15, 23, 42, 0.82);
+  --theme-border: #1e293b;
+  --theme-muted: #94a3b8;
+  --theme-primary: #e2e8f0;
+  --theme-secondary: #cbd5e1;
+  --theme-accent: #22d3ee;
+  --theme-chart: rgba(15, 23, 42, 0.52);
+  --theme-grid: #1e293b;
+  --theme-grid-fade: #1e293b88;
+  --theme-tooltip: #0f172acc;
+  --theme-purple: #818cf8;
+}
+
+.theme-light {
+  --theme-bg: linear-gradient(180deg, #eef5ff, #f8fafc 30%);
+  --theme-card: #ffffff;
+  --theme-sidebar: rgba(255, 255, 255, 0.7);
+  --theme-header: rgba(248, 250, 252, 0.88);
+  --theme-border: #dbe4f0;
+  --theme-muted: #64748b;
+  --theme-primary: #0f172a;
+  --theme-secondary: #334155;
+  --theme-accent: #0ea5e9;
+  --theme-chart: #f1f5f9;
+  --theme-grid: #d6e0ea;
+  --theme-grid-fade: #d6e0ea66;
+  --theme-tooltip: #f8fafcee;
+  --theme-purple: #6366f1;
+}
+
+.bg-theme-card {
+  background-color: var(--theme-card);
+}
+
+.bg-theme-sidebar {
+  background-color: var(--theme-sidebar);
+}
+
+.bg-theme-header {
+  background-color: var(--theme-header);
+}
+
+.bg-theme-chart {
+  background-color: var(--theme-chart);
+}
+
+.border-theme-border {
+  border-color: var(--theme-border);
+}
+
+.border-theme-accent {
+  border-color: var(--theme-accent);
+}
+
+.text-theme-muted {
+  color: var(--theme-muted);
+}
+
+.text-theme-primary {
+  color: var(--theme-primary);
+}
+
+.text-theme-secondary {
+  color: var(--theme-secondary);
+}
+
+.text-theme-accent {
+  color: var(--theme-accent);
+}
+
+.bg-theme-accent {
+  background-color: var(--theme-accent);
+}
+
+.ring-theme-accent\/40 {
+  --tw-ring-color: color-mix(in srgb, var(--theme-accent) 40%, transparent);
+}
+
+.ring-theme-accent\/50 {
+  --tw-ring-color: color-mix(in srgb, var(--theme-accent) 50%, transparent);
+}
+
+.compact-mode section {
+  padding: 1rem;
 }

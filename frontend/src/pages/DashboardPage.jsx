@@ -4,20 +4,20 @@ import CompanyComparisonChart from '../charts/CompanyComparisonChart';
 import CompanyTable from '../components/CompanyTable';
 import KPICards from '../components/KPICards';
 
-const DashboardPage = () => {
+const DashboardPage = ({ onOpenCompanies, chartAnimations, compactMode }) => {
   return (
-    <main className="flex-1 space-y-6 p-6">
+    <main className={`space-y-6 p-6 ${compactMode ? 'space-y-4 p-4' : ''}`}>
       <KPICards />
       <section className="grid gap-6 xl:grid-cols-3">
         <div className="xl:col-span-2">
-          <GrowthChart />
+          <GrowthChart chartAnimations={chartAnimations} />
         </div>
         <div>
-          <DomainDistributionChart />
+          <DomainDistributionChart chartAnimations={chartAnimations} />
         </div>
       </section>
-      <CompanyComparisonChart />
-      <CompanyTable />
+      <CompanyComparisonChart chartAnimations={chartAnimations} />
+      <CompanyTable onViewAll={onOpenCompanies} />
     </main>
   );
 };

@@ -1,34 +1,47 @@
-const companies = [
-  { name: 'OpenAI', domain: 'Generative AI', score: 98.7, growth: '+14%' },
-  { name: 'Anthropic', domain: 'Foundation Models', score: 96.2, growth: '+11%' },
-  { name: 'NVIDIA', domain: 'Infrastructure', score: 94.9, growth: '+9%' },
-  { name: 'Scale AI', domain: 'Data Platforms', score: 90.3, growth: '+7%' },
-];
+import SectionHeading from './SectionHeading';
+import { companies } from '../data/companies';
 
-const CompanyTable = () => {
+const topCompanies = [...companies]
+  .sort((a, b) => b.influenceScore - a.influenceScore)
+  .slice(0, 6)
+  .map((company) => ({
+    ...company,
+    growth: `+${Math.round(company.growthScore / 10)}%`,
+    score: company.influenceScore,
+  }));
+
+const CompanyTable = ({ onViewAll }) => {
   return (
-    <section className="rounded-2xl border border-dashboard-border bg-dashboard-card p-5 shadow-card">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-slate-100">Top Companies</h2>
-        <button className="text-sm text-cyan-300 hover:text-cyan-200">View all</button>
-      </div>
+    <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
+      <SectionHeading
+        title="Top Companies"
+        action={
+          <button
+            type="button"
+            onClick={onViewAll}
+            className="text-sm font-medium text-theme-accent transition hover:text-theme-primary"
+          >
+            View all
+          </button>
+        }
+      />
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-700/50 text-left text-dashboard-muted">
+            <tr className="border-b border-theme-border text-left text-theme-muted">
               <th className="pb-3 font-medium">Company</th>
               <th className="pb-3 font-medium">Domain</th>
-              <th className="pb-3 font-medium">Score</th>
+              <th className="pb-3 font-medium">Influence</th>
               <th className="pb-3 font-medium">Growth</th>
             </tr>
           </thead>
           <tbody>
-            {companies.map((company) => (
-              <tr key={company.name} className="border-b border-slate-800/80 text-slate-200 last:border-b-0">
-                <td className="py-3 font-medium">{company.name}</td>
+            {topCompanies.map((company) => (
+              <tr key={company.name} className="border-b border-theme-border text-theme-secondary last:border-b-0">
+                <td className="py-3 font-medium text-theme-primary">{company.name}</td>
                 <td className="py-3">{company.domain}</td>
-                <td className="py-3">{company.score}</td>
-                <td className="py-3 text-emerald-300">{company.growth}</td>
+                <td className="py-3">{company.score.toFixed(1)}</td>
+                <td className="py-3 text-emerald-400">{company.growth}</td>
               </tr>
             ))}
           </tbody>

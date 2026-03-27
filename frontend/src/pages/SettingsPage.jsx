@@ -1,33 +1,76 @@
-const settingsCards = [
-  {
-    title: 'Profile Preferences',
-    description: 'Manage account profile details, team visibility, and dashboard display preferences.',
-  },
-  {
-    title: 'Notification Controls',
-    description: 'Configure update cadence for KPI alerts, trend summaries, and weekly intelligence digests.',
-  },
-  {
-    title: 'Data Source Integrations',
-    description: 'Placeholder for connecting external analytics, market feeds, and proprietary scoring data.',
-  },
-];
+import SectionHeading from '../components/SectionHeading';
 
-const SettingsPage = () => {
+const ToggleControl = ({ label, description, checked, onChange }) => (
+  <label className="flex items-start justify-between gap-3 rounded-xl border border-theme-border bg-theme-chart p-4">
+    <div>
+      <p className="text-sm font-medium text-theme-primary">{label}</p>
+      <p className="mt-1 text-xs text-theme-muted">{description}</p>
+    </div>
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      className={`relative h-6 w-11 rounded-full transition ${checked ? 'bg-theme-accent' : 'bg-slate-500/50'}`}
+    >
+      <span
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${checked ? 'left-[22px]' : 'left-0.5'}`}
+      />
+    </button>
+  </label>
+);
+
+const SettingsPage = ({ settings, compactMode }) => {
+  const {
+    theme,
+    setTheme,
+    setCompactMode,
+    chartAnimations,
+    setChartAnimations,
+    notificationsEnabled,
+    setNotificationsEnabled,
+  } = settings;
+
   return (
-    <main className="flex-1 space-y-6 p-6">
-      <section className="rounded-2xl border border-dashboard-border bg-dashboard-card p-5 shadow-card">
-        <h1 className="text-xl font-semibold text-slate-100">Settings</h1>
-        <p className="mt-1 text-sm text-dashboard-muted">Configuration placeholders for future platform controls.</p>
-      </section>
+    <main className={`space-y-6 p-6 ${compactMode ? 'space-y-4 p-4' : ''}`}>
+      <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
+        <SectionHeading
+          title="Settings"
+          subtitle="Personalize display, interaction density, and dashboard behavior."
+        />
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {settingsCards.map((card) => (
-          <article key={card.title} className="rounded-2xl border border-dashboard-border bg-dashboard-card p-5 shadow-card">
-            <h2 className="text-base font-semibold text-slate-100">{card.title}</h2>
-            <p className="mt-2 text-sm text-dashboard-muted">{card.description}</p>
-          </article>
-        ))}
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="rounded-xl border border-theme-border bg-theme-chart p-4 text-sm text-theme-muted">
+            Theme preference
+            <select
+              value={theme}
+              onChange={(event) => setTheme(event.target.value)}
+              className="mt-2 w-full rounded-lg border border-theme-border bg-theme-card px-3 py-2 text-theme-primary"
+            >
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </label>
+
+          <ToggleControl
+            label="Compact mode"
+            description="Reduce spacing for denser information views"
+            checked={compactMode}
+            onChange={() => setCompactMode((prev) => !prev)}
+          />
+          <ToggleControl
+            label="Chart animation"
+            description="Enable smooth transitions in chart rendering"
+            checked={chartAnimations}
+            onChange={() => setChartAnimations((prev) => !prev)}
+          />
+          <ToggleControl
+            label="Notifications"
+            description="Receive trend and KPI threshold alerts"
+            checked={notificationsEnabled}
+            onChange={() => setNotificationsEnabled((prev) => !prev)}
+          />
+        </div>
       </section>
     </main>
   );
