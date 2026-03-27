@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
 import ScrollToTopButton from './components/ScrollToTopButton';
@@ -8,6 +8,7 @@ import DomainsPage from './pages/DomainsPage';
 import InsightsPage from './pages/InsightsPage';
 import AskAIPage from './pages/AskAIPage';
 import SettingsPage from './pages/SettingsPage';
+import CompanyDetailDrawer from './components/CompanyDetailDrawer';
 import { useDashboardData } from './hooks/useDashboardData';
 
 const readPref = (key, fallback) => {
@@ -22,6 +23,7 @@ const App = () => {
   const [chartAnimations, setChartAnimations] = useState(() => readPref('aid-chart-animations', true));
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => readPref('aid-notifications', true));
   const intelligenceData = useDashboardData();
+  const [activeCompanyDetail, setActiveCompanyDetail] = useState(null);
 
   useEffect(() => {
     localStorage.setItem('aid-theme', theme);
@@ -53,10 +55,20 @@ const App = () => {
     [theme, compactMode, chartAnimations, notificationsEnabled],
   );
 
+  const openCompanyDetail = useCallback((companyId, contextLabel) => {
+    setActiveCompanyDetail({ id: companyId, contextLabel });
+  }, []);
+
   const activeContent = useMemo(() => {
     switch (activeSection) {
       case 'Companies':
-        return <CompaniesPage compactMode={compactMode} companies={intelligenceData.companies} />;
+        return (
+          <CompaniesPage
+            compactMode={compactMode}
+            companies={intelligenceData.companies}
+            onOpenCompany={openCompanyDetail}
+          />
+        );
       case 'Domains':
         return <DomainsPage compactMode={compactMode} domains={intelligenceData.domains} />;
       case 'Insights':
@@ -67,6 +79,7 @@ const App = () => {
             compactMode={compactMode}
             companies={intelligenceData.companies}
             onNavigate={setActiveSection}
+            onOpenCompany={openCompanyDetail}
           />
         );
       case 'Settings':
@@ -78,11 +91,12 @@ const App = () => {
             compactMode={compactMode}
             chartAnimations={chartAnimations}
             onOpenCompanies={() => setActiveSection('Companies')}
+            onOpenCompany={openCompanyDetail}
             data={intelligenceData}
           />
         );
     }
-  }, [activeSection, appSettings, chartAnimations, compactMode, intelligenceData]);
+  }, [activeSection, appSettings, chartAnimations, compactMode, intelligenceData, openCompanyDetail]);
 
   return (
     <div className={`app-shell min-h-screen ${theme === 'light' ? 'theme-light' : 'theme-dark'}`}>
@@ -99,6 +113,15 @@ const App = () => {
         </div>
       </div>
       <ScrollToTopButton />
+
+      {activeCompanyDetail ? (
+        <CompanyDetailDrawer
+          companyId={activeCompanyDetail.id}
+          contextLabel={activeCompanyDetail.contextLabel}
+          onClose={() => setActiveCompanyDetail(null)}
+          onNavigateCompanies={() => setActiveSection('Companies')}
+        />
+      ) : null}
     </div>
   );
 };

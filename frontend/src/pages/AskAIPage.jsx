@@ -35,66 +35,11 @@ const highlightText = (text, terms = []) => {
   });
 };
 
-const CompanyModal = ({ activeView, companyDetail, companyInsight, loading, onClose }) => {
-  if (!activeView) {
-    return null;
-  }
-
-  const title = activeView.mode === 'insight' ? `${activeView.name} insight` : `${activeView.name} profile`;
-
-  return (
-    <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="text-base font-semibold text-theme-primary">{title}</h3>
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-lg border border-theme-border px-3 py-1.5 text-xs text-theme-muted hover:border-theme-accent hover:text-theme-accent"
-        >
-          Close
-        </button>
-      </div>
-
-      {loading ? <p className="mt-3 text-sm text-theme-muted">Loading company context…</p> : null}
-
-      {activeView.mode === 'detail' && companyDetail ? (
-        <div className="mt-3 space-y-2 text-sm text-theme-secondary">
-          <p>{companyDetail.description}</p>
-          <p>
-            <span className="font-semibold text-theme-primary">Domain:</span> {companyDetail.domain} · {companyDetail.subdomain}
-          </p>
-          <p>
-            <span className="font-semibold text-theme-primary">Tags:</span> {companyDetail.tags?.join(', ')}
-          </p>
-          <p>
-            <span className="font-semibold text-theme-primary">Scores:</span> Growth {companyDetail.growth_score?.toFixed(1)} · Influence{' '}
-            {companyDetail.influence_score?.toFixed(1)} · Power {companyDetail.power_score?.toFixed(1)}
-          </p>
-        </div>
-      ) : null}
-
-      {activeView.mode === 'insight' && companyInsight ? (
-        <div className="mt-3 space-y-2 text-sm text-theme-secondary">
-          <p>{companyInsight.summary}</p>
-          <p>{companyInsight.detail}</p>
-          <p>
-            <span className="font-semibold text-theme-primary">Signal:</span> {companyInsight.signal}
-          </p>
-        </div>
-      ) : null}
-    </section>
-  );
-};
-
-const AskAIPage = ({ compactMode, companies = [], onNavigate }) => {
+const AskAIPage = ({ compactMode, companies = [], onNavigate, onOpenCompany }) => {
   const [query, setQuery] = useState('Which AI infrastructure companies are strongest right now?');
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [modalLoading, setModalLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeView, setActiveView] = useState(null);
-  const [companyDetail, setCompanyDetail] = useState(null);
-  const [companyInsight, setCompanyInsight] = useState(null);
 
   const companyNames = useMemo(() => new Set(companies.map((company) => company.name.toLowerCase())), [companies]);
 
@@ -119,32 +64,6 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate }) => {
     }
   };
 
-  const openCompanyView = async (result, mode) => {
-    setActiveView({ id: result.id, name: result.name, mode });
-    setCompanyDetail(null);
-    setCompanyInsight(null);
-    setModalLoading(true);
-
-    try {
-      if (mode === 'insight') {
-        const insight = await apiClient.getCompanyInsight(result.id);
-        setCompanyInsight(insight);
-      } else {
-        const company = await apiClient.getCompanyById(result.id);
-        setCompanyDetail(company);
-      }
-    } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : 'Failed to load company context.');
-    } finally {
-      setModalLoading(false);
-    }
-  };
-
-  const clearModal = () => {
-    setActiveView(null);
-    setCompanyDetail(null);
-    setCompanyInsight(null);
-  };
 
   return (
     <main className={`space-y-6 p-6 ${compactMode ? 'space-y-4 p-4' : ''}`}>
@@ -219,7 +138,13 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate }) => {
                 <ul className="mt-2 space-y-1 text-sm text-theme-secondary">
                   {response.analysis?.strongest_matching_companies?.map((company) => (
                     <li key={company.id}>
-                      #{company.rank} {company.name} · {company.domain} · Power {company.power_score.toFixed(1)}
+                      <button
+                        type="button"
+                        onClick={() => onOpenCompany?.(company.id, 'Ask AI · strongest matching companies')}
+                        className="text-left transition hover:text-theme-accent"
+                      >
+                        #{company.rank} {company.name} · {company.domain} · Power {company.power_score.toFixed(1)}
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -290,17 +215,17 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate }) => {
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => openCompanyView(result, 'detail')}
+                      onClick={() => onOpenCompany?.(result.id, 'Ask AI results')}
                       className="rounded-lg border border-theme-border px-3 py-1.5 text-xs text-theme-muted hover:border-theme-accent hover:text-theme-accent"
                     >
-                      View company detail
+                      Open company detail
                     </button>
                     <button
                       type="button"
-                      onClick={() => openCompanyView(result, 'insight')}
+                      onClick={() => onOpenCompany?.(result.id, 'Ask AI insight card')}
                       className="rounded-lg border border-theme-border px-3 py-1.5 text-xs text-theme-muted hover:border-theme-accent hover:text-theme-accent"
                     >
-                      View company insight
+                      Open full insight
                     </button>
                     {companyNames.has(result.name.toLowerCase()) ? (
                       <button
@@ -325,14 +250,6 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate }) => {
               ))}
             </ul>
           </section>
-
-          <CompanyModal
-            activeView={activeView}
-            companyDetail={companyDetail}
-            companyInsight={companyInsight}
-            loading={modalLoading}
-            onClose={clearModal}
-          />
         </>
       ) : null}
     </main>

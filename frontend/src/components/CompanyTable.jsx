@@ -1,6 +1,6 @@
 import SectionHeading from './SectionHeading';
 
-const CompanyTable = ({ companies, onViewAll }) => {
+const CompanyTable = ({ companies, onViewAll, onOpenCompany }) => {
   return (
     <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
       <SectionHeading
@@ -27,7 +27,11 @@ const CompanyTable = ({ companies, onViewAll }) => {
           </thead>
           <tbody>
             {companies.map((company) => (
-              <tr key={company.id} className="border-b border-theme-border text-theme-secondary last:border-b-0">
+              <tr
+                key={company.id}
+                className="cursor-pointer border-b border-theme-border text-theme-secondary transition hover:bg-theme-surface/50 last:border-b-0"
+                onClick={() => onOpenCompany?.(company.id, 'Dashboard · Top companies')}
+              >
                 <td className="py-3 font-medium text-theme-primary">{company.name}</td>
                 <td className="py-3">{company.domain}</td>
                 <td className="py-3">{company.score.toFixed(1)}</td>
