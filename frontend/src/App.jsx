@@ -5,6 +5,7 @@ import ScrollToTopButton from './components/ScrollToTopButton';
 import DashboardPage from './pages/DashboardPage';
 import CompaniesPage from './pages/CompaniesPage';
 import DomainsPage from './pages/DomainsPage';
+import MarketViewPage from './pages/MarketViewPage';
 import InsightsPage from './pages/InsightsPage';
 import AskAIPage from './pages/AskAIPage';
 import InvestorModePage from './pages/InvestorModePage';
@@ -65,6 +66,14 @@ const App = () => {
       case 'Companies':
         return (
           <CompaniesPage
+            compactMode={compactMode}
+            companies={intelligenceData.companies}
+            onOpenCompany={openCompanyDetail}
+          />
+        );
+      case 'Market View':
+        return (
+          <MarketViewPage
             compactMode={compactMode}
             companies={intelligenceData.companies}
             onOpenCompany={openCompanyDetail}

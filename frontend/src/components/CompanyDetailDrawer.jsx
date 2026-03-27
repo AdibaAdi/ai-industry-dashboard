@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
+import { getMarketSignalForCompany } from '../data/marketSignals';
 
 const InfoItem = ({ label, value }) => (
   <div className="rounded-lg border border-theme-border bg-theme-surface p-3">
@@ -12,6 +13,20 @@ const scoreColor = {
   growth: 'text-emerald-400',
   influence: 'text-cyan-400',
   power: 'text-theme-primary',
+};
+
+const getPublicTickerStatus = (company) => {
+  const marketSignal = getMarketSignalForCompany(company.id);
+
+  if (company.company_type === 'Public') {
+    return marketSignal?.ticker ? `Public · ${marketSignal.ticker}` : 'Public · No public ticker';
+  }
+
+  if (company.company_type === 'Private') {
+    return 'Private · No public ticker';
+  }
+
+  return `${company.company_type} · No public ticker`;
 };
 
 const CompanyDetailDrawer = ({ companyId, contextLabel, onClose, onNavigateCompanies }) => {
@@ -128,6 +143,7 @@ const CompanyDetailDrawer = ({ companyId, contextLabel, onClose, onNavigateCompa
               <InfoItem label="Subdomain" value={company.subdomain} />
               <InfoItem label="Founded year" value={company.founded_year} />
               <InfoItem label="Company type" value={company.company_type} />
+              <InfoItem label="Public market status" value={getPublicTickerStatus(company)} />
             </div>
 
             <section className="rounded-xl border border-theme-border bg-theme-surface p-4">
