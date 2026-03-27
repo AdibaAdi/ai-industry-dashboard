@@ -49,6 +49,7 @@ const RANKING_WEIGHTS = {
   scoreSignal: 10,
   explicitCompanyPriority: 20,
   explicitDomainMissPenalty: -22,
+  semanticRelevanceBaseline: 72,
 };
 
 const tokenize = (value) =>
@@ -201,7 +202,7 @@ const computeWeightedScore = ({ document, normalizedQuery, tokens, explicitCompa
   contributions.push(`score signal (+${scoreSignal.toFixed(1)})`);
 
   if (semanticSimilarity > 0) {
-    const semanticBoost = semanticSimilarity * RANKING_WEIGHTS.semanticSimilarity;
+    const semanticBoost = semanticSimilarity * RANKING_WEIGHTS.semanticRelevanceBaseline;
     score += semanticBoost;
     breakdown.semantic += semanticBoost;
     contributions.push(`semantic similarity (+${semanticBoost.toFixed(1)})`);
@@ -417,7 +418,7 @@ const buildSnippets = (rankedResults, query) =>
     })
     .concat(`Search query interpreted as: "${query}".`);
 
-const formatReasonFromBreakdown = ({ company, contributions, breakdown, semanticSimilarity, keywordScore, metadataScore }) => {
+const formatReasonFromBreakdown = ({ company, contributions, breakdown, semanticSimilarity, metadataScore }) => {
   const reasonParts = [];
   const sortedSignals = [
     ['name', breakdown.name, 'name match'],
@@ -442,8 +443,8 @@ const formatReasonFromBreakdown = ({ company, contributions, breakdown, semantic
     reasonParts.push(`semantic similarity ${semanticSimilarity.toFixed(3)}`);
   }
 
-  if (keywordScore > 0 || metadataScore > 0) {
-    reasonParts.push(`retrieval boost keyword=${keywordScore.toFixed(2)}, metadata=${metadataScore.toFixed(2)}`);
+  if (metadataScore > 0) {
+    reasonParts.push(`retrieval boost metadata=${metadataScore.toFixed(2)}`);
   }
 
   if (contributions.some((part) => part.includes('domain mismatch'))) {
@@ -488,35 +489,33 @@ const rankGeneralResults = ({ companies, normalizedQuery, matchTokens, explicitC
   const hybridSignals = retrieveHybridCompanySignals({
     companies,
     query: normalizedQuery,
-    tokens: matchTokens,
     metadataFilter,
-    semanticOptions: { limit: 20, minSimilarity: 0.08 },
+    semanticOptions: { limit: 20, minSimilarity: 0.06 },
   });
 
   const ranked = companies
     .map((company) => toSearchDocument(company))
     .map((document) => {
       const semanticSimilarity = hybridSignals.semanticScores.get(document.company.id) ?? 0;
-      const keywordScore = hybridSignals.keywordScores.get(document.company.id) ?? 0;
       const metadataScore = hybridSignals.metadataScores.get(document.company.id) ?? 0;
 
       const { score, contributions, breakdown } = computeWeightedScore({
         document,
         normalizedQuery,
-        tokens: matchTokens,
+        tokens: [],
         explicitCompanies,
-        explicitDomainTerms,
+        explicitDomainTerms: [],
         semanticSimilarity,
       });
 
-      const hybridBoost = keywordScore * 3 + metadataScore * 4;
-      const boostedScore = score + hybridBoost;
-      if (hybridBoost > 0) {
-        contributions.push(`hybrid retrieval boost (+${hybridBoost.toFixed(1)})`);
+      const metadataBoost = metadataScore * 4;
+      const boostedScore = score + metadataBoost;
+      if (metadataBoost > 0) {
+        contributions.push(`metadata retrieval boost (+${metadataBoost.toFixed(1)})`);
       }
 
       if (hybridSignals.retrieval.usedFallback) {
-        contributions.push('semantic retrieval fallback to keyword and metadata signals');
+        contributions.push('semantic retrieval fallback to metadata and company strength signals');
       }
 
       return {
@@ -526,7 +525,6 @@ const rankGeneralResults = ({ companies, normalizedQuery, matchTokens, explicitC
         contributions,
         breakdown,
         semanticSimilarity,
-        keywordScore,
         metadataScore,
       };
     })

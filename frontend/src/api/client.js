@@ -40,14 +40,8 @@ export const apiClient = {
   },
 
   async searchCompanies(query) {
-    const response = await fetch(`${API_BASE_URL}/search`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query }),
-    });
-
+    const params = new URLSearchParams({ q: query });
+    const response = await fetch(`${API_BASE_URL}/search?${params.toString()}`);
     return parseJson(response);
   },
 

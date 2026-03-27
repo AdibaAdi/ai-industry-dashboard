@@ -3,7 +3,7 @@ import { getDomainsHandler } from '../controllers/domainController.js';
 import { postIngestCompaniesHandler, postSimulateIngestionHandler } from '../controllers/ingestionController.js';
 import { getHealthHandler } from '../controllers/healthController.js';
 import { getCompanyInsightHandler, getInsightsHandler } from '../controllers/insightController.js';
-import { postSearchHandler } from '../controllers/searchController.js';
+import { getSearchHandler, postSearchHandler } from '../controllers/searchController.js';
 
 const routes = [
   { method: 'GET', path: '/health', handler: getHealthHandler },
@@ -12,6 +12,7 @@ const routes = [
   { method: 'GET', path: '/companies/:id', handler: getCompanyByIdHandler },
   { method: 'GET', path: '/domains', handler: getDomainsHandler },
   { method: 'GET', path: '/insights', handler: getInsightsHandler },
+  { method: 'GET', path: '/search', handler: getSearchHandler },
   { method: 'POST', path: '/search', handler: postSearchHandler },
   { method: 'POST', path: '/dev/ingestion', handler: postIngestCompaniesHandler },
   { method: 'POST', path: '/dev/ingestion/simulate', handler: postSimulateIngestionHandler },
