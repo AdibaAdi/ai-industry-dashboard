@@ -6,12 +6,28 @@ A production-minded AI company intelligence dashboard with a serverless-ready AP
 
 ```text
 backend/
-  src/data/companies.js              # Canonical seed dataset (40+ companies)
-  src/services/companyRepository.js  # Repository abstraction (future DB swap)
-  src/services/scoringService.js     # Power score normalization/logic
-  src/services/domainService.js      # Domain aggregations and leader extraction
-  src/services/insightsService.js    # Portfolio insights generation
-  src/server.js                      # HTTP API routes
+  src/
+    api/
+      controllers/                   # Request handlers (companies/domains/insights/health)
+      routes/                        # Route matching table
+    data/
+      companies.js                   # Canonical seed dataset (40+ companies)
+      repositories/companyRepository.js
+      connectors/databaseClient.js   # DB adapter scaffold
+    services/
+      companyService.js              # Query/filter/sort orchestration
+      domainService.js
+      insightsService.js
+      scoringService.js
+      pipeline/classificationService.js
+      vector/vectorStoreService.js
+      jobs/schedulerService.js
+    utils/
+      http.js                        # HTTP response + URL helpers
+      companyQueryUtils.js           # Query parsing/filter/sort utilities
+    types/companyTypes.js            # Shared JSDoc schemas
+    app.js                           # HTTP app composition
+    server.js                        # Runtime bootstrap
 
 frontend/
   src/api/client.js                  # API client layer

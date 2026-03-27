@@ -1,5 +1,5 @@
-import { companies as seedCompanies } from '../data/companies.js';
-import { normalizeCompanyScores } from './scoringService.js';
+import { companies as seedCompanies } from '../companies.js';
+import { normalizeCompanyScores } from '../../services/scoringService.js';
 
 let cachedCompanies = normalizeCompanyScores(seedCompanies);
 
