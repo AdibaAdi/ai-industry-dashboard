@@ -9,8 +9,8 @@ export const getCompaniesHandler = ({ searchParams }) => {
   };
 };
 
-export const getCompanyByIdHandler = ({ pathname }) => {
-  const id = pathname.split('/')[2];
+export const getCompanyByIdHandler = ({ params }) => {
+  const id = params.id;
   const company = findCompanyById(id);
 
   if (!company) {

@@ -1,9 +1,9 @@
 import { createServer } from 'node:http';
 import { matchRoute } from './api/routes/index.js';
-import { parseRequestUrl, sendJson } from './utils/http.js';
+import { parseRequestUrl, readJsonBody, sendJson } from './utils/http.js';
 
 export const createAppServer = () =>
-  createServer((req, res) => {
+  createServer(async (req, res) => {
     if (!req.url || !req.method) {
       sendJson(res, 400, { error: 'Invalid request.' });
       return;
@@ -22,6 +22,22 @@ export const createAppServer = () =>
       return;
     }
 
-    const { statusCode, payload } = route.handler({ pathname, searchParams });
+    let body = null;
+    if (req.method === 'POST') {
+      try {
+        body = await readJsonBody(req);
+      } catch (_error) {
+        sendJson(res, 400, { error: 'Invalid JSON body.' });
+        return;
+      }
+    }
+
+    const { statusCode, payload } = route.handler({
+      pathname,
+      searchParams,
+      params: route.params,
+      body,
+    });
+
     sendJson(res, statusCode, payload);
   });
