@@ -26,12 +26,21 @@ export const toComparisonData = (companies, count = 5) =>
 
 export const toGrowthTrendData = (companies) => {
   const currentYear = new Date().getFullYear();
+  const minYear = 2006;
+  const rollingStartYear = Math.max(minYear, currentYear - 20);
+
   const foundedYears = companies
     .map((company) => Number(company.founded_year))
-    .filter((year) => Number.isInteger(year) && year > 0);
+    .filter((year) => Number.isInteger(year) && year >= minYear);
 
-  const startYear = foundedYears.length > 0 ? Math.min(...foundedYears) : currentYear;
-  const endYear = Math.max(currentYear, foundedYears.length > 0 ? Math.max(...foundedYears) : currentYear);
+  const maxFoundedYear = foundedYears.length > 0 ? Math.max(...foundedYears) : currentYear;
+  const endYear = Math.max(currentYear, maxFoundedYear);
+
+  const earliestRelevantYear = [...new Set(foundedYears)]
+    .sort((a, b) => a - b)
+    .find((year) => year >= rollingStartYear);
+
+  const startYear = earliestRelevantYear ?? rollingStartYear;
 
   const yearlyBuckets = companies.reduce((acc, company) => {
     const year = Number(company.founded_year);
