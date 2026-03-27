@@ -10,6 +10,7 @@ import {
 export const useDashboardData = () => {
   const [state, setState] = useState({
     companies: [],
+    companiesMeta: null,
     domains: [],
     insights: null,
     investorMode: null,
@@ -35,6 +36,7 @@ export const useDashboardData = () => {
 
         setState({
           companies: companiesResponse.data,
+          companiesMeta: companiesResponse.meta ?? null,
           domains: domainsResponse.data,
           insights: insightsResponse.data,
           investorMode: investorModeResponse.data,
@@ -73,6 +75,7 @@ export const useDashboardData = () => {
         topDomain: state.domains[0]?.domain ?? 'N/A',
         topScore: state.companies[0]?.power_score ?? 0,
         topCompany: state.companies[0]?.name ?? 'N/A',
+        freshness: state.companiesMeta?.refresh ?? null,
       },
     }),
     [state],

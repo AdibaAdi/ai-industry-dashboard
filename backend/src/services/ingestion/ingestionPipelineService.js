@@ -6,6 +6,7 @@ import { persistIngestedCompanies } from './persistenceService.js';
 import { ingestRawSourceRecords } from './rawSourceIngestionService.js';
 import { recomputeCompanyScoresBatch } from './scoringPipelineService.js';
 import { sampleRawCompanyRecords } from './devIngestionFixtures.js';
+import { recordRefreshRun } from '../refreshStatusService.js';
 
 const splitByNewCompanies = (records) => {
   const existingIds = new Set(getCompanies().map((company) => company.id));
@@ -34,9 +35,19 @@ export const runCompanyIngestionPipeline = async (rawCompanies, options = {}) =>
 
   const scoredRecords = recomputeCompanyScoresBatch(classifiedRecords);
   const persistenceResult = persistIngestedCompanies(scoredRecords);
+  const completedAt = new Date().toISOString();
+
+  recordRefreshRun({
+    completedAt,
+    insertedCount: persistenceResult.inserted.length,
+    updatedCount: persistenceResult.updated.length,
+    refreshType: 'manual_ingestion',
+    refreshSource: options.dataSource,
+  });
 
   return {
     summary: {
+      completed_at: completedAt,
       received: receivedRecords.length,
       normalized: normalizedRecords.length,
       enriched: enrichedRecords.length,
