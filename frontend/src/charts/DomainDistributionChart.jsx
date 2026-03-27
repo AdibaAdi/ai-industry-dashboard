@@ -1,4 +1,5 @@
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import { useCallback, useState } from 'react';
+import { Cell, Pie, PieChart, ResponsiveContainer, Sector, Tooltip } from 'recharts';
 import SectionHeading from '../components/SectionHeading';
 
 const COLORS = ['#00E5FF', '#7C83FF', '#FF74D4', '#2DD4BF', '#F9C74F', '#A78BFA', '#F97316'];
@@ -39,7 +40,30 @@ const DomainTooltipContent = ({ active, payload, coordinate, viewBox }) => {
   );
 };
 
+const renderActiveShape = ({ outerRadius, ...shapeProps }) => (
+  <Sector
+    {...shapeProps}
+    outerRadius={outerRadius + 6}
+    stroke="rgba(255, 255, 255, 0.55)"
+    strokeWidth={3}
+    style={{
+      filter: 'drop-shadow(0 0 10px rgba(34, 211, 238, 0.35))',
+      transition: 'all 200ms ease',
+    }}
+  />
+);
+
 const DomainDistributionChart = ({ chartAnimations, domainData }) => {
+  const [activeIndex, setActiveIndex] = useState(-1);
+
+  const handleSliceEnter = useCallback((_, index) => {
+    setActiveIndex(index);
+  }, []);
+
+  const handleSliceLeave = useCallback(() => {
+    setActiveIndex(-1);
+  }, []);
+
   return (
     <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
       <SectionHeading title="Domain Distribution" subtitle="Share of tracked companies by strategic category" />
@@ -48,6 +72,8 @@ const DomainDistributionChart = ({ chartAnimations, domainData }) => {
           <PieChart>
             <Pie
               isAnimationActive={chartAnimations}
+              animationDuration={420}
+              animationEasing="ease-out"
               data={domainData}
               dataKey="value"
               nameKey="name"
@@ -58,9 +84,21 @@ const DomainDistributionChart = ({ chartAnimations, domainData }) => {
               paddingAngle={3}
               stroke="var(--theme-chart)"
               strokeWidth={2}
+              activeIndex={activeIndex}
+              activeShape={renderActiveShape}
+              onMouseEnter={handleSliceEnter}
+              onMouseLeave={handleSliceLeave}
             >
               {domainData.map((entry, index) => (
-                <Cell key={entry.name} fill={COLORS[index % COLORS.length]} />
+                <Cell
+                  key={entry.name}
+                  fill={COLORS[index % COLORS.length]}
+                  fillOpacity={activeIndex === -1 || activeIndex === index ? 1 : 0.45}
+                  style={{
+                    transition: 'fill-opacity 220ms ease, filter 220ms ease',
+                    filter: activeIndex === index ? 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.25))' : 'none',
+                  }}
+                />
               ))}
             </Pie>
             <Tooltip
