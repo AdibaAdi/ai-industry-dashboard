@@ -3,6 +3,42 @@ import SectionHeading from '../components/SectionHeading';
 
 const COLORS = ['#00E5FF', '#7C83FF', '#FF74D4', '#2DD4BF', '#F9C74F', '#A78BFA', '#F97316'];
 
+const DomainTooltipContent = ({ active, payload, coordinate, viewBox }) => {
+  if (!active || !payload?.length) return null;
+
+  const [entry] = payload;
+  const label = entry?.name ?? '';
+  const value = entry?.value ?? 0;
+  const color = entry?.color ?? '#00E5FF';
+
+  const centerX = (viewBox?.x ?? 0) + (viewBox?.width ?? 0) / 2;
+  const centerY = (viewBox?.y ?? 0) + (viewBox?.height ?? 0) / 2;
+  const isNearCenter =
+    coordinate &&
+    Math.abs((coordinate.x ?? 0) - centerX) < 56 &&
+    Math.abs((coordinate.y ?? 0) - centerY) < 56;
+
+  const translateX = isNearCenter && coordinate?.x >= centerX ? 12 : 0;
+  const translateY = isNearCenter ? -12 : 0;
+
+  return (
+    <div
+      className="domain-tooltip"
+      style={{
+        transform: `translate(${translateX}px, ${translateY}px)`,
+      }}
+    >
+      <div className="domain-tooltip-inner">
+        <div className="mb-1 flex items-center gap-2">
+          <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+          <span className="text-sm font-medium text-theme-secondary">{label}</span>
+        </div>
+        <div className="text-base font-semibold text-theme-primary">{value} companies</div>
+      </div>
+    </div>
+  );
+};
+
 const DomainDistributionChart = ({ chartAnimations, domainData }) => {
   return (
     <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
@@ -28,13 +64,9 @@ const DomainDistributionChart = ({ chartAnimations, domainData }) => {
               ))}
             </Pie>
             <Tooltip
-              formatter={(value) => `${value} companies`}
-              contentStyle={{
-                border: '1px solid var(--theme-border)',
-                borderRadius: '0.75rem',
-                backgroundColor: 'var(--theme-tooltip)',
-                color: 'var(--theme-primary)',
-              }}
+              cursor={false}
+              offset={16}
+              content={<DomainTooltipContent />}
             />
           </PieChart>
         </ResponsiveContainer>
