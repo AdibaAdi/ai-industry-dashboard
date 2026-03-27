@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import SectionHeading from '../components/SectionHeading';
+import ScoreInfoTooltip from '../components/ScoreInfoTooltip';
 
 const sortOptions = [
   { key: 'growth_score-desc', label: 'Growth: High to low' },
@@ -8,6 +9,13 @@ const sortOptions = [
   { key: 'influence_score-asc', label: 'Influence: Low to high' },
   { key: 'power_score-desc', label: 'Power: High to low' },
 ];
+
+const ScoreHeader = ({ label, scoreKey }) => (
+  <span className="inline-flex items-center">
+    {label}
+    <ScoreInfoTooltip scoreKey={scoreKey} />
+  </span>
+);
 
 const CompaniesPage = ({ compactMode, companies, onOpenCompany }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,9 +96,9 @@ const CompaniesPage = ({ compactMode, companies, onOpenCompany }) => {
               <tr className="border-b border-theme-border text-left text-theme-muted">
                 <th className="pb-3 font-medium">Name</th>
                 <th className="pb-3 font-medium">Domain</th>
-                <th className="pb-3 font-medium">Growth Score</th>
-                <th className="pb-3 font-medium">Influence Score</th>
-                <th className="pb-3 font-medium">Power Score</th>
+                <th className="pb-3 font-medium"><ScoreHeader label="Growth Score" scoreKey="growth" /></th>
+                <th className="pb-3 font-medium"><ScoreHeader label="Influence Score" scoreKey="influence" /></th>
+                <th className="pb-3 font-medium"><ScoreHeader label="Power Score" scoreKey="power" /></th>
               </tr>
             </thead>
             <tbody>
