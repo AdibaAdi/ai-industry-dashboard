@@ -202,6 +202,9 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate }) => {
           <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Answer</p>
             <p className="mt-3 text-sm leading-6 text-theme-secondary">{response.answer}</p>
+            {response.intent ? (
+              <p className="mt-2 text-xs uppercase tracking-[0.12em] text-theme-muted">Intent: {response.intent.replaceAll('_', ' ')}</p>
+            ) : null}
           </section>
 
           <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
@@ -221,18 +224,38 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate }) => {
                   ))}
                 </ul>
               </article>
-              <article className="rounded-xl border border-theme-border bg-theme-surface p-4 md:col-span-2">
-                <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Why they match</h3>
-                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-theme-secondary">
-                  {response.analysis?.why_they_match?.map((reason) => (
-                    <li key={reason}>{reason}</li>
-                  ))}
-                </ul>
-              </article>
               {response.analysis?.domain_trend ? (
                 <article className="rounded-xl border border-theme-border bg-theme-surface p-4 md:col-span-2">
                   <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Notable domain trend</h3>
                   <p className="mt-2 text-sm text-theme-secondary">{response.analysis.domain_trend}</p>
+                </article>
+              ) : null}
+
+              <article className="rounded-xl border border-theme-border bg-theme-surface p-4 md:col-span-2">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Why these results were chosen</h3>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-theme-secondary">
+                  {response.analysis?.why_these_results_were_chosen?.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+              {response.analysis?.limitations ? (
+                <article className="rounded-xl border border-theme-border bg-theme-surface p-4 md:col-span-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Limitations</h3>
+                  <p className="mt-2 text-sm text-theme-secondary">{response.analysis.limitations}</p>
+                </article>
+              ) : null}
+              {response.analysis?.comparison ? (
+                <article className="rounded-xl border border-theme-border bg-theme-surface p-4 md:col-span-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Comparison scorecard</h3>
+                  <ul className="mt-2 space-y-1 text-sm text-theme-secondary">
+                    {response.analysis.comparison.companies?.map((company) => (
+                      <li key={company.id}>
+                        {company.name} · {company.domain} / {company.subdomain} · Growth {company.growth_score.toFixed(1)} · Influence {company.influence_score.toFixed(1)} · Power {company.power_score.toFixed(1)}
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-2 text-sm text-theme-secondary">{response.analysis.comparison.short_comparative_analysis}</p>
                 </article>
               ) : null}
             </div>
@@ -248,7 +271,7 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate }) => {
                       #{index + 1} {result.name}
                     </h3>
                     <span className="rounded-lg bg-theme-chart px-2 py-1 text-xs text-theme-accent">
-                      Power {result.power_score.toFixed(1)}
+                      Power {result.power_score.toFixed(1)} · Relevance {(result.relevance_score * 100).toFixed(0)}%
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-theme-muted">
