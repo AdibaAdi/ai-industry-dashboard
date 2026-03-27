@@ -1,7 +1,8 @@
-import CompanyTable from '../components/CompanyTable';
-import KPICards from '../components/KPICards';
 import DomainDistributionChart from '../charts/DomainDistributionChart';
 import GrowthChart from '../charts/GrowthChart';
+import CompanyComparisonChart from '../charts/CompanyComparisonChart';
+import CompanyTable from '../components/CompanyTable';
+import KPICards from '../components/KPICards';
 
 const DashboardPage = () => {
   return (
@@ -15,6 +16,7 @@ const DashboardPage = () => {
           <DomainDistributionChart />
         </div>
       </section>
+      <CompanyComparisonChart />
       <CompanyTable />
     </main>
   );
