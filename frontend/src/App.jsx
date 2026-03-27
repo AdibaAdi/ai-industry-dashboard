@@ -116,7 +116,11 @@ const App = () => {
 
   return (
     <div className={`app-shell min-h-screen ${theme === 'light' ? 'theme-light' : 'theme-dark'}`}>
-      <Header theme={theme} onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))} />
+      <Header
+        theme={theme}
+        freshness={intelligenceData.kpis.freshness}
+        onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+      />
       <div className="mx-auto flex w-full max-w-7xl">
         <Sidebar activeItem={activeSection} onSelectItem={setActiveSection} />
         <div className={`flex-1 ${compactMode ? 'compact-mode' : ''}`}>

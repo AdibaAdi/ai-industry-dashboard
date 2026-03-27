@@ -1,11 +1,19 @@
 import { listCompanies, findCompanyById } from '../../services/companyService.js';
+import { getRefreshStatus } from '../../services/refreshStatusService.js';
 
 export const getCompaniesHandler = ({ searchParams }) => {
   const data = listCompanies(searchParams);
+  const refreshStatus = getRefreshStatus();
 
   return {
     statusCode: 200,
-    payload: { data, meta: { total: data.length } },
+    payload: {
+      data,
+      meta: {
+        total: data.length,
+        refresh: refreshStatus,
+      },
+    },
   };
 };
 
