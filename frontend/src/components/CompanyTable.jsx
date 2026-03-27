@@ -1,16 +1,6 @@
 import SectionHeading from './SectionHeading';
-import { companies } from '../data/companies';
 
-const topCompanies = [...companies]
-  .sort((a, b) => b.influenceScore - a.influenceScore)
-  .slice(0, 6)
-  .map((company) => ({
-    ...company,
-    growth: `+${Math.round(company.growthScore / 10)}%`,
-    score: company.influenceScore,
-  }));
-
-const CompanyTable = ({ onViewAll }) => {
+const CompanyTable = ({ companies, onViewAll }) => {
   return (
     <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
       <SectionHeading
@@ -36,8 +26,8 @@ const CompanyTable = ({ onViewAll }) => {
             </tr>
           </thead>
           <tbody>
-            {topCompanies.map((company) => (
-              <tr key={company.name} className="border-b border-theme-border text-theme-secondary last:border-b-0">
+            {companies.map((company) => (
+              <tr key={company.id} className="border-b border-theme-border text-theme-secondary last:border-b-0">
                 <td className="py-3 font-medium text-theme-primary">{company.name}</td>
                 <td className="py-3">{company.domain}</td>
                 <td className="py-3">{company.score.toFixed(1)}</td>

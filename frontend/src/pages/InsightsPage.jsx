@@ -1,49 +1,24 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import SectionHeading from '../components/SectionHeading';
 
-const insights = [
-  {
-    title: 'Foundation model momentum remains strong',
-    summary: 'Top model providers maintained double-digit quarterly growth driven by enterprise demand.',
-    detail:
-      'Enterprise workloads are consolidating around fewer trusted model providers. Security controls, lower latency tiers, and reliable eval benchmarks are expanding average contract values across finance, legal, and support automation.',
-  },
-  {
-    title: 'Infrastructure leaders gained influence',
-    summary: 'GPU and model hosting companies saw higher influence scores due to ecosystem dependency.',
-    detail:
-      'Inference routing, model serving, and GPU access are now strategic dependencies. Companies that reduce deployment friction and optimize cost-per-token are becoming default vendors in multi-model stacks.',
-  },
-  {
-    title: 'Data platforms outpaced expectations',
-    summary: 'Data tooling vendors recorded stronger growth scores as model evaluation needs increased.',
-    detail:
-      'As quality and safety standards rise, teams are investing in synthetic data, annotation feedback loops, and rigorous regression testing. This is driving demand for integrated data and MLOps platforms.',
-  },
-  {
-    title: 'Domain diversification is accelerating',
-    summary: 'Healthcare and robotics categories are growing faster relative to their current market share.',
-    detail:
-      'Vertical AI companies with direct outcome ownership are capturing defensible value. High-switching-cost domains such as healthcare operations and robotics are seeing stronger retention curves and expansion revenue.',
-  },
-];
-
-const InsightsPage = ({ compactMode }) => {
+const InsightsPage = ({ compactMode, insights }) => {
   const [activeInsight, setActiveInsight] = useState(null);
+
+  const highlights = useMemo(() => insights?.highlights ?? [], [insights]);
 
   return (
     <main className={`space-y-6 p-6 ${compactMode ? 'space-y-4 p-4' : ''}`}>
       <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
         <SectionHeading
           title="Insights"
-          subtitle="Interactive analyst-style observations from mock portfolio intelligence."
+          subtitle="Interactive analyst-style observations generated from API intelligence."
         />
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
-        {insights.map((insight) => (
+        {highlights.map((insight) => (
           <button
-            key={insight.title}
+            key={insight.id}
             type="button"
             onClick={() => setActiveInsight(insight)}
             className="rounded-2xl border border-theme-border bg-theme-card p-5 text-left shadow-card transition hover:-translate-y-0.5 hover:border-theme-accent"
