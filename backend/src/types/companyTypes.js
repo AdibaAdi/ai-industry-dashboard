@@ -23,6 +23,7 @@
  * @property {number} influence_score
  * @property {number} power_score
  * @property {string[]} source_urls
+ * @property {string[]} sources
  * @property {string[]} tags
  * @property {string} last_updated
  * @property {string} created_at

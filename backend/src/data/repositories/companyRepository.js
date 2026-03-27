@@ -10,7 +10,8 @@ const withOperationalMetadata = (company) => {
     created_at: createdAt,
     updated_at: company.updated_at ?? createdAt,
     ingestion_status: company.ingestion_status ?? 'seeded',
-    confidence_score: Number((company.confidence_score ?? 0.95).toFixed(2)),
+    confidence_score: Number((company.confidence_score ?? 0.82).toFixed(2)),
+    sources: company.sources ?? ['Crunchbase', 'Company Website', 'Industry Reports'],
     data_source: company.data_source ?? 'seed-data',
   };
 };

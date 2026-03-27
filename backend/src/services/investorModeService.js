@@ -172,6 +172,9 @@ export const getInvestorModeSnapshot = (rawCompanies) => {
           name: company.name,
           domain: company.domain,
           investor_score: company.investor_score,
+          confidence_score: company.confidence_score,
+          sources: company.sources,
+          last_updated: company.last_updated,
           reason: company.investor_reasons[0] ?? 'multi-factor momentum signal',
         })),
     )
