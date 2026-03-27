@@ -7,6 +7,7 @@ import CompaniesPage from './pages/CompaniesPage';
 import DomainsPage from './pages/DomainsPage';
 import InsightsPage from './pages/InsightsPage';
 import SettingsPage from './pages/SettingsPage';
+import { useDashboardData } from './hooks/useDashboardData';
 
 const readPref = (key, fallback) => {
   const value = localStorage.getItem(key);
@@ -19,6 +20,7 @@ const App = () => {
   const [compactMode, setCompactMode] = useState(() => readPref('aid-compact-mode', false));
   const [chartAnimations, setChartAnimations] = useState(() => readPref('aid-chart-animations', true));
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => readPref('aid-notifications', true));
+  const intelligenceData = useDashboardData();
 
   useEffect(() => {
     localStorage.setItem('aid-theme', theme);
@@ -53,11 +55,11 @@ const App = () => {
   const activeContent = useMemo(() => {
     switch (activeSection) {
       case 'Companies':
-        return <CompaniesPage compactMode={compactMode} />;
+        return <CompaniesPage compactMode={compactMode} companies={intelligenceData.companies} />;
       case 'Domains':
-        return <DomainsPage compactMode={compactMode} />;
+        return <DomainsPage compactMode={compactMode} domains={intelligenceData.domains} />;
       case 'Insights':
-        return <InsightsPage compactMode={compactMode} />;
+        return <InsightsPage compactMode={compactMode} insights={intelligenceData.insights} />;
       case 'Settings':
         return <SettingsPage settings={appSettings} compactMode={compactMode} />;
       case 'Dashboard':
@@ -67,17 +69,25 @@ const App = () => {
             compactMode={compactMode}
             chartAnimations={chartAnimations}
             onOpenCompanies={() => setActiveSection('Companies')}
+            data={intelligenceData}
           />
         );
     }
-  }, [activeSection, appSettings, chartAnimations, compactMode]);
+  }, [activeSection, appSettings, chartAnimations, compactMode, intelligenceData]);
 
   return (
     <div className={`app-shell min-h-screen ${theme === 'light' ? 'theme-light' : 'theme-dark'}`}>
       <Header theme={theme} onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))} />
       <div className="mx-auto flex w-full max-w-7xl">
         <Sidebar activeItem={activeSection} onSelectItem={setActiveSection} />
-        <div className={`flex-1 ${compactMode ? 'compact-mode' : ''}`}>{activeContent}</div>
+        <div className={`flex-1 ${compactMode ? 'compact-mode' : ''}`}>
+          {intelligenceData.error ? (
+            <div className="m-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-sm text-red-200">
+              Failed to load API data: {intelligenceData.error}
+            </div>
+          ) : null}
+          {activeContent}
+        </div>
       </div>
       <ScrollToTopButton />
     </div>

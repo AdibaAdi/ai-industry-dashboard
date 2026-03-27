@@ -1,17 +1,9 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import SectionHeading from '../components/SectionHeading';
 
-const domainData = [
-  { name: 'Generative AI', value: 32 },
-  { name: 'Infrastructure', value: 24 },
-  { name: 'Robotics', value: 19 },
-  { name: 'Data Tools', value: 15 },
-  { name: 'Other', value: 10 },
-];
+const COLORS = ['#00E5FF', '#7C83FF', '#FF74D4', '#2DD4BF', '#F9C74F', '#A78BFA', '#F97316'];
 
-const COLORS = ['#00E5FF', '#7C83FF', '#FF74D4', '#2DD4BF', '#F9C74F'];
-
-const DomainDistributionChart = ({ chartAnimations }) => {
+const DomainDistributionChart = ({ chartAnimations, domainData }) => {
   return (
     <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
       <SectionHeading title="Domain Distribution" subtitle="Share of tracked companies by strategic category" />
@@ -36,7 +28,7 @@ const DomainDistributionChart = ({ chartAnimations }) => {
               ))}
             </Pie>
             <Tooltip
-              formatter={(value) => `${value}%`}
+              formatter={(value) => `${value} companies`}
               contentStyle={{
                 border: '1px solid var(--theme-border)',
                 borderRadius: '0.75rem',
@@ -52,7 +44,7 @@ const DomainDistributionChart = ({ chartAnimations }) => {
           <div key={domain.name} className="flex items-center gap-2 text-theme-secondary">
             <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
             <span>{domain.name}</span>
-            <span className="ml-auto text-theme-muted">{domain.value}%</span>
+            <span className="ml-auto text-theme-muted">{domain.value}</span>
           </div>
         ))}
       </div>

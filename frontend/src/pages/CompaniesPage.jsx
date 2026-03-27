@@ -1,34 +1,32 @@
 import { useMemo, useState } from 'react';
 import SectionHeading from '../components/SectionHeading';
-import { companies } from '../data/companies';
 
 const sortOptions = [
-  { key: 'growthScore-desc', label: 'Growth: High to low' },
-  { key: 'growthScore-asc', label: 'Growth: Low to high' },
-  { key: 'influenceScore-desc', label: 'Influence: High to low' },
-  { key: 'influenceScore-asc', label: 'Influence: Low to high' },
+  { key: 'growth_score-desc', label: 'Growth: High to low' },
+  { key: 'growth_score-asc', label: 'Growth: Low to high' },
+  { key: 'influence_score-desc', label: 'Influence: High to low' },
+  { key: 'influence_score-asc', label: 'Influence: Low to high' },
+  { key: 'power_score-desc', label: 'Power: High to low' },
 ];
 
-const CompaniesPage = ({ compactMode }) => {
+const CompaniesPage = ({ compactMode, companies }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [domainFilter, setDomainFilter] = useState('All domains');
   const [sortBy, setSortBy] = useState(sortOptions[0].key);
 
   const domains = useMemo(
     () => ['All domains', ...new Set(companies.map((company) => company.domain))],
-    [],
+    [companies],
   );
 
   const filteredCompanies = useMemo(() => {
     const [field, direction] = sortBy.split('-');
 
     return companies
-      .filter((company) =>
-        company.name.toLowerCase().includes(searchTerm.toLowerCase().trim()),
-      )
+      .filter((company) => company.name.toLowerCase().includes(searchTerm.toLowerCase().trim()))
       .filter((company) => (domainFilter === 'All domains' ? true : company.domain === domainFilter))
       .sort((a, b) => (direction === 'desc' ? b[field] - a[field] : a[field] - b[field]));
-  }, [domainFilter, searchTerm, sortBy]);
+  }, [companies, domainFilter, searchTerm, sortBy]);
 
   return (
     <main className={`space-y-6 p-6 ${compactMode ? 'space-y-4 p-4' : ''}`}>
@@ -92,15 +90,17 @@ const CompaniesPage = ({ compactMode }) => {
                 <th className="pb-3 font-medium">Domain</th>
                 <th className="pb-3 font-medium">Growth Score</th>
                 <th className="pb-3 font-medium">Influence Score</th>
+                <th className="pb-3 font-medium">Power Score</th>
               </tr>
             </thead>
             <tbody>
               {filteredCompanies.map((company) => (
-                <tr key={company.name} className="border-b border-theme-border text-theme-secondary last:border-b-0">
+                <tr key={company.id} className="border-b border-theme-border text-theme-secondary last:border-b-0">
                   <td className="py-3 font-medium text-theme-primary">{company.name}</td>
                   <td className="py-3">{company.domain}</td>
-                  <td className="py-3 text-emerald-400">{company.growthScore.toFixed(1)}</td>
-                  <td className="py-3 text-cyan-400">{company.influenceScore.toFixed(1)}</td>
+                  <td className="py-3 text-emerald-400">{company.growth_score.toFixed(1)}</td>
+                  <td className="py-3 text-cyan-400">{company.influence_score.toFixed(1)}</td>
+                  <td className="py-3 text-theme-primary">{company.power_score.toFixed(1)}</td>
                 </tr>
               ))}
             </tbody>
