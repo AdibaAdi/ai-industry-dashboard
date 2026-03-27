@@ -4,7 +4,7 @@ import CompanyComparisonChart from '../charts/CompanyComparisonChart';
 import CompanyTable from '../components/CompanyTable';
 import KPICards from '../components/KPICards';
 
-const DashboardPage = ({ onOpenCompanies, chartAnimations, compactMode, data }) => {
+const DashboardPage = ({ onOpenCompanies, onOpenCompany, chartAnimations, compactMode, data }) => {
   return (
     <main className={`space-y-6 p-6 ${compactMode ? 'space-y-4 p-4' : ''}`}>
       <KPICards kpis={data.kpis} loading={data.loading} />
@@ -17,7 +17,7 @@ const DashboardPage = ({ onOpenCompanies, chartAnimations, compactMode, data }) 
         </div>
       </section>
       <CompanyComparisonChart chartAnimations={chartAnimations} companyData={data.companyComparisonData} />
-      <CompanyTable companies={data.topCompanies} onViewAll={onOpenCompanies} />
+      <CompanyTable companies={data.topCompanies} onViewAll={onOpenCompanies} onOpenCompany={onOpenCompany} />
     </main>
   );
 };

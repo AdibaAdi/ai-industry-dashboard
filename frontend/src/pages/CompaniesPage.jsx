@@ -9,7 +9,7 @@ const sortOptions = [
   { key: 'power_score-desc', label: 'Power: High to low' },
 ];
 
-const CompaniesPage = ({ compactMode, companies }) => {
+const CompaniesPage = ({ compactMode, companies, onOpenCompany }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [domainFilter, setDomainFilter] = useState('All domains');
   const [sortBy, setSortBy] = useState(sortOptions[0].key);
@@ -95,7 +95,11 @@ const CompaniesPage = ({ compactMode, companies }) => {
             </thead>
             <tbody>
               {filteredCompanies.map((company) => (
-                <tr key={company.id} className="border-b border-theme-border text-theme-secondary last:border-b-0">
+                <tr
+                  key={company.id}
+                  className="cursor-pointer border-b border-theme-border text-theme-secondary transition hover:bg-theme-surface/50 last:border-b-0"
+                  onClick={() => onOpenCompany?.(company.id, 'Companies table')}
+                >
                   <td className="py-3 font-medium text-theme-primary">{company.name}</td>
                   <td className="py-3">{company.domain}</td>
                   <td className="py-3 text-emerald-400">{company.growth_score.toFixed(1)}</td>
