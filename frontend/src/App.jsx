@@ -7,6 +7,7 @@ import CompaniesPage from './pages/CompaniesPage';
 import DomainsPage from './pages/DomainsPage';
 import InsightsPage from './pages/InsightsPage';
 import AskAIPage from './pages/AskAIPage';
+import InvestorModePage from './pages/InvestorModePage';
 import SettingsPage from './pages/SettingsPage';
 import CompanyDetailDrawer from './components/CompanyDetailDrawer';
 import { useDashboardData } from './hooks/useDashboardData';
@@ -73,6 +74,15 @@ const App = () => {
         return <DomainsPage compactMode={compactMode} domains={intelligenceData.domains} />;
       case 'Insights':
         return <InsightsPage compactMode={compactMode} insights={intelligenceData.insights} />;
+      case 'Investor Mode':
+        return (
+          <InvestorModePage
+            compactMode={compactMode}
+            investorMode={intelligenceData.investorMode}
+            loading={intelligenceData.loading}
+            onOpenCompany={openCompanyDetail}
+          />
+        );
       case 'Ask AI':
         return (
           <AskAIPage

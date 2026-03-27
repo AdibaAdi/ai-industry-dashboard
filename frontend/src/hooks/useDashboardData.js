@@ -12,6 +12,7 @@ export const useDashboardData = () => {
     companies: [],
     domains: [],
     insights: null,
+    investorMode: null,
     loading: true,
     error: null,
   });
@@ -21,10 +22,11 @@ export const useDashboardData = () => {
 
     const loadData = async () => {
       try {
-        const [companiesResponse, domainsResponse, insightsResponse] = await Promise.all([
+        const [companiesResponse, domainsResponse, insightsResponse, investorModeResponse] = await Promise.all([
           apiClient.getCompanies(),
           apiClient.getDomains(),
           apiClient.getInsights(),
+          apiClient.getInvestorMode(),
         ]);
 
         if (!isMounted) {
@@ -35,6 +37,7 @@ export const useDashboardData = () => {
           companies: companiesResponse.data,
           domains: domainsResponse.data,
           insights: insightsResponse.data,
+          investorMode: investorModeResponse.data,
           loading: false,
           error: null,
         });
