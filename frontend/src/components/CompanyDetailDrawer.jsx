@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
 import { getMarketSignalForCompany } from '../data/marketSignals';
+import ConfidenceBadge, { getConfidenceMeta } from './ConfidenceBadge';
 
 const InfoItem = ({ label, value }) => (
   <div className="rounded-lg border border-theme-border bg-theme-surface p-3">
@@ -155,6 +156,20 @@ const CompanyDetailDrawer = ({ companyId, contextLabel, onClose, onNavigateCompa
               </div>
             </section>
 
+
+            <section className="rounded-xl border border-theme-border bg-theme-surface p-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-theme-muted">Data confidence</p>
+              <div className="mt-2">
+                <ConfidenceBadge
+                  score={company.confidence_score}
+                  sources={company.sources}
+                  lastUpdated={company.last_updated}
+                />
+              </div>
+              <p className="mt-2 text-xs text-theme-muted">
+                {getConfidenceMeta(company.confidence_score).explanation}
+              </p>
+            </section>
             <section className="rounded-xl border border-theme-border bg-theme-surface p-4">
               <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-theme-muted">Tags</p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -221,7 +236,8 @@ const CompanyDetailDrawer = ({ companyId, contextLabel, onClose, onNavigateCompa
                   </li>
                 ))}
               </ul>
-              <p className="mt-3 text-xs text-theme-muted">Last updated: {company.last_updated}</p>
+              <p className="mt-3 text-xs text-theme-muted">Data sources: {(company.sources ?? []).join(' • ') || 'Not available'}</p>
+              <p className="mt-1 text-xs text-theme-muted">Last updated: {company.last_updated}</p>
             </section>
 
             <div className="flex flex-wrap gap-2">

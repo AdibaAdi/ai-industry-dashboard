@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ScoringHowItWorksModal from '../components/ScoringHowItWorksModal';
 import ScoreInfoTooltip from '../components/ScoreInfoTooltip';
 import SectionHeading from '../components/SectionHeading';
+import ConfidenceBadge from '../components/ConfidenceBadge';
 
 const scoreTone = (value) => {
   if (value >= 90) return 'text-emerald-400';
@@ -53,6 +54,7 @@ const InvestorModePage = ({ compactMode, investorMode, loading, onOpenCompany })
                   </span>
                 </th>
                 <th className="pb-3 font-medium">Why flagged</th>
+                <th className="pb-3 font-medium">Confidence</th>
               </tr>
             </thead>
             <tbody>
@@ -66,6 +68,14 @@ const InvestorModePage = ({ compactMode, investorMode, loading, onOpenCompany })
                   <td className="py-3">{company.domain}</td>
                   <td className={`py-3 font-semibold ${scoreTone(company.investor_score)}`}>{company.investor_score.toFixed(1)}</td>
                   <td className="py-3 text-xs text-theme-muted">{company.investor_reasons?.join(' • ')}</td>
+                  <td className="py-3">
+                    <ConfidenceBadge
+                      score={company.confidence_score}
+                      sources={company.sources}
+                      lastUpdated={company.last_updated}
+                      compact
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -89,6 +99,14 @@ const InvestorModePage = ({ compactMode, investorMode, loading, onOpenCompany })
                   <p className={`text-sm font-semibold ${scoreTone(company.investor_score)}`}>{company.investor_score.toFixed(1)}</p>
                 </div>
                 <p className="mt-1 text-xs uppercase tracking-wide text-theme-accent">{company.domain}</p>
+                <div className="mt-2">
+                  <ConfidenceBadge
+                    score={company.confidence_score}
+                    sources={company.sources}
+                    lastUpdated={company.last_updated}
+                    compact
+                  />
+                </div>
                 <p className="mt-1 text-xs text-theme-muted">{company.reason}</p>
               </button>
             ))}
@@ -128,6 +146,14 @@ const InvestorModePage = ({ compactMode, investorMode, loading, onOpenCompany })
             >
               <p className="text-sm font-semibold text-theme-primary">{company.name}</p>
               <p className="mt-1 text-xs uppercase tracking-wide text-theme-accent">{company.domain}</p>
+              <div className="mt-2">
+                <ConfidenceBadge
+                  score={company.confidence_score}
+                  sources={company.sources}
+                  lastUpdated={company.last_updated}
+                  compact
+                />
+              </div>
               <p className="mt-2 text-xs text-theme-muted">Underexposure: {company.underexposure_score.toFixed(1)}</p>
               <p className={`mt-2 text-sm font-semibold ${scoreTone(company.investor_score)}`}>
                 investor_score {company.investor_score.toFixed(1)}

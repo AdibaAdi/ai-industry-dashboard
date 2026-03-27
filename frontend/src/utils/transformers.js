@@ -12,6 +12,9 @@ export const toTopCompanies = (companies, count = 6) =>
       domain: company.domain,
       score: company.influence_score,
       growth: `+${Math.round(company.growth_score / 10)}%`,
+      confidence_score: company.confidence_score,
+      sources: company.sources,
+      last_updated: company.last_updated,
     }));
 
 export const toComparisonData = (companies, count = 5) =>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import SectionHeading from '../components/SectionHeading';
 import ScoreInfoTooltip from '../components/ScoreInfoTooltip';
+import ConfidenceBadge from '../components/ConfidenceBadge';
 
 const sortOptions = [
   { key: 'growth_score-desc', label: 'Growth: High to low' },
@@ -99,6 +100,7 @@ const CompaniesPage = ({ compactMode, companies, onOpenCompany }) => {
                 <th className="pb-3 font-medium"><ScoreHeader label="Growth Score" scoreKey="growth" /></th>
                 <th className="pb-3 font-medium"><ScoreHeader label="Influence Score" scoreKey="influence" /></th>
                 <th className="pb-3 font-medium"><ScoreHeader label="Power Score" scoreKey="power" /></th>
+                <th className="pb-3 font-medium">Confidence</th>
               </tr>
             </thead>
             <tbody>
@@ -113,6 +115,14 @@ const CompaniesPage = ({ compactMode, companies, onOpenCompany }) => {
                   <td className="py-3 text-emerald-400">{company.growth_score.toFixed(1)}</td>
                   <td className="py-3 text-cyan-400">{company.influence_score.toFixed(1)}</td>
                   <td className="py-3 text-theme-primary">{company.power_score.toFixed(1)}</td>
+                  <td className="py-3">
+                    <ConfidenceBadge
+                      score={company.confidence_score}
+                      sources={company.sources}
+                      lastUpdated={company.last_updated}
+                      compact
+                    />
+                  </td>
                 </tr>
               ))}
             </tbody>

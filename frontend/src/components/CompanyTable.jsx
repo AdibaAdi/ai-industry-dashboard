@@ -1,4 +1,5 @@
 import SectionHeading from './SectionHeading';
+import ConfidenceBadge from './ConfidenceBadge';
 
 const CompanyTable = ({ companies, onViewAll, onOpenCompany }) => {
   return (
@@ -23,6 +24,7 @@ const CompanyTable = ({ companies, onViewAll, onOpenCompany }) => {
               <th className="pb-3 font-medium">Domain</th>
               <th className="pb-3 font-medium">Influence</th>
               <th className="pb-3 font-medium">Growth</th>
+              <th className="pb-3 font-medium">Confidence</th>
             </tr>
           </thead>
           <tbody>
@@ -36,6 +38,14 @@ const CompanyTable = ({ companies, onViewAll, onOpenCompany }) => {
                 <td className="py-3">{company.domain}</td>
                 <td className="py-3">{company.score.toFixed(1)}</td>
                 <td className="py-3 text-emerald-400">{company.growth}</td>
+                <td className="py-3">
+                  <ConfidenceBadge
+                    score={company.confidence_score}
+                    sources={company.sources}
+                    lastUpdated={company.last_updated}
+                    compact
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
