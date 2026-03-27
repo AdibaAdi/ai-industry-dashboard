@@ -39,16 +39,16 @@ const STOPWORDS = new Set([
 const HIGHLIGHTABLE_FIELDS = ['domain', 'subdomain', 'tags', 'description'];
 
 const RANKING_WEIGHTS = {
-  exactCompanyNameMatch: 50,
-  partialCompanyNameMatch: 16,
-  domainMatch: 18,
-  subdomainMatch: 14,
+  exactCompanyNameMatch: 60,
+  partialCompanyNameMatch: 28,
+  domainMatch: 26,
+  subdomainMatch: 12,
   tagMatch: 11,
-  descriptionMatch: 8,
-  semanticSimilarity: 22,
-  scoreSignal: 18,
+  descriptionMatch: 6,
+  semanticSimilarity: 14,
+  scoreSignal: 10,
   explicitCompanyPriority: 20,
-  explicitDomainMissPenalty: -14,
+  explicitDomainMissPenalty: -22,
 };
 
 const tokenize = (value) =>
@@ -136,6 +136,16 @@ const computeScoreSignal = (company) => company.power_score * 0.5 + company.grow
 
 const computeWeightedScore = ({ document, normalizedQuery, tokens, explicitCompanies, explicitDomainTerms, semanticSimilarity }) => {
   const contributions = [];
+  const breakdown = {
+    name: 0,
+    domain: 0,
+    subdomain: 0,
+    tags: 0,
+    description: 0,
+    semantic: 0,
+    scoreSignal: 0,
+    hasDomainFamilyMatch: false,
+  };
   let score = 0;
 
   const companyName = document.fields.name;
@@ -143,9 +153,11 @@ const computeWeightedScore = ({ document, normalizedQuery, tokens, explicitCompa
 
   if (companyName === normalizedQuery || explicitCompanies.some((entry) => entry.id === document.company.id)) {
     score += RANKING_WEIGHTS.exactCompanyNameMatch;
+    breakdown.name += RANKING_WEIGHTS.exactCompanyNameMatch;
     contributions.push(`exact company match (+${RANKING_WEIGHTS.exactCompanyNameMatch.toFixed(1)})`);
   } else if (tokens.some((token) => nameTokens.includes(token) || companyName.includes(token))) {
     score += RANKING_WEIGHTS.partialCompanyNameMatch;
+    breakdown.name += RANKING_WEIGHTS.partialCompanyNameMatch;
     contributions.push(`company name overlap (+${RANKING_WEIGHTS.partialCompanyNameMatch.toFixed(1)})`);
   }
 
@@ -153,6 +165,8 @@ const computeWeightedScore = ({ document, normalizedQuery, tokens, explicitCompa
   if (domainMatches > 0) {
     const domainScore = domainMatches * RANKING_WEIGHTS.domainMatch;
     score += domainScore;
+    breakdown.domain += domainScore;
+    breakdown.hasDomainFamilyMatch = true;
     contributions.push(`domain alignment (+${domainScore.toFixed(1)})`);
   }
 
@@ -160,6 +174,8 @@ const computeWeightedScore = ({ document, normalizedQuery, tokens, explicitCompa
   if (subdomainMatches > 0) {
     const subdomainScore = subdomainMatches * RANKING_WEIGHTS.subdomainMatch;
     score += subdomainScore;
+    breakdown.subdomain += subdomainScore;
+    breakdown.hasDomainFamilyMatch = true;
     contributions.push(`subdomain alignment (+${subdomainScore.toFixed(1)})`);
   }
 
@@ -167,6 +183,7 @@ const computeWeightedScore = ({ document, normalizedQuery, tokens, explicitCompa
   if (tagMatches > 0) {
     const tagScore = tagMatches * RANKING_WEIGHTS.tagMatch;
     score += tagScore;
+    breakdown.tags += tagScore;
     contributions.push(`tag relevance (+${tagScore.toFixed(1)})`);
   }
 
@@ -174,16 +191,19 @@ const computeWeightedScore = ({ document, normalizedQuery, tokens, explicitCompa
   if (descriptionMatches > 0) {
     const descriptionScore = descriptionMatches * RANKING_WEIGHTS.descriptionMatch;
     score += descriptionScore;
+    breakdown.description += descriptionScore;
     contributions.push(`description relevance (+${descriptionScore.toFixed(1)})`);
   }
 
   const scoreSignal = (computeScoreSignal(document.company) / 100) * RANKING_WEIGHTS.scoreSignal;
   score += scoreSignal;
+  breakdown.scoreSignal += scoreSignal;
   contributions.push(`score signal (+${scoreSignal.toFixed(1)})`);
 
   if (semanticSimilarity > 0) {
     const semanticBoost = semanticSimilarity * RANKING_WEIGHTS.semanticSimilarity;
     score += semanticBoost;
+    breakdown.semantic += semanticBoost;
     contributions.push(`semantic similarity (+${semanticBoost.toFixed(1)})`);
   }
 
@@ -206,7 +226,7 @@ const computeWeightedScore = ({ document, normalizedQuery, tokens, explicitCompa
     }
   }
 
-  return { score, contributions };
+  return { score, contributions, breakdown };
 };
 
 const toRelevanceScore = (score, topScore) => {
@@ -355,7 +375,7 @@ const buildStructuredSummary = ({ query, intent, rankedResults, explicitCompanie
   const lowConfidence = topThree[0].relevance_score < 0.55;
 
   const summary = {
-    key_finding: `The strongest result is ${topThree[0].company.name}, combining direct query alignment with high score-based strength.`,
+    key_finding: `The strongest result is ${topThree[0].company.name}, with weighted relevance led by name/domain alignment, followed by tags, description, and company strength signals.`,
     strongest_matching_companies: topThree.map((entry, index) => ({
       rank: index + 1,
       id: entry.company.id,
@@ -397,6 +417,71 @@ const buildSnippets = (rankedResults, query) =>
     })
     .concat(`Search query interpreted as: "${query}".`);
 
+const formatReasonFromBreakdown = ({ company, contributions, breakdown, semanticSimilarity, keywordScore, metadataScore }) => {
+  const reasonParts = [];
+  const sortedSignals = [
+    ['name', breakdown.name, 'name match'],
+    ['domain', breakdown.domain + breakdown.subdomain, 'domain/subdomain match'],
+    ['tags', breakdown.tags, 'tag match'],
+    ['description', breakdown.description, 'description match'],
+  ]
+    .filter(([, value]) => value > 0)
+    .sort((a, b) => b[1] - a[1]);
+
+  if (sortedSignals.length) {
+    reasonParts.push(
+      `primary relevance from ${sortedSignals
+        .map(([, value, label]) => `${label} (+${value.toFixed(1)})`)
+        .join(', ')}`,
+    );
+  } else {
+    reasonParts.push('selected mainly from semantic similarity and company strength signals');
+  }
+
+  if (semanticSimilarity > 0) {
+    reasonParts.push(`semantic similarity ${semanticSimilarity.toFixed(3)}`);
+  }
+
+  if (keywordScore > 0 || metadataScore > 0) {
+    reasonParts.push(`retrieval boost keyword=${keywordScore.toFixed(2)}, metadata=${metadataScore.toFixed(2)}`);
+  }
+
+  if (contributions.some((part) => part.includes('domain mismatch'))) {
+    reasonParts.push('penalized for weak direct domain alignment');
+  }
+
+  reasonParts.push(`company strength signal ${computeScoreSignal(company).toFixed(1)}`);
+  return reasonParts.join('; ');
+};
+
+const applyLowRelevanceFilter = (rankedEntries, { explicitCompanies }) => {
+  if (!rankedEntries.length) {
+    return rankedEntries;
+  }
+
+  const topScore = rankedEntries[0].score;
+  const minRelativeScore = topScore * 0.34;
+  const minAbsoluteScore = 24;
+
+  const filtered = rankedEntries.filter((entry) => {
+    const isExplicit = explicitCompanies.some((company) => company.id === entry.company.id);
+    if (isExplicit) {
+      return true;
+    }
+
+    const hasDirectSignal =
+      entry.breakdown.name > 0 ||
+      entry.breakdown.domain > 0 ||
+      entry.breakdown.subdomain > 0 ||
+      entry.breakdown.tags > 0 ||
+      entry.semanticSimilarity >= 0.12;
+
+    return entry.score >= minAbsoluteScore && entry.score >= minRelativeScore && hasDirectSignal;
+  });
+
+  return filtered.length ? filtered : rankedEntries.slice(0, Math.min(3, rankedEntries.length));
+};
+
 const rankGeneralResults = ({ companies, normalizedQuery, matchTokens, explicitCompanies, explicitDomainTerms }) => {
   const metadataFilter = explicitDomainTerms.length ? { tags: explicitDomainTerms } : {};
 
@@ -415,7 +500,7 @@ const rankGeneralResults = ({ companies, normalizedQuery, matchTokens, explicitC
       const keywordScore = hybridSignals.keywordScores.get(document.company.id) ?? 0;
       const metadataScore = hybridSignals.metadataScores.get(document.company.id) ?? 0;
 
-      const { score, contributions } = computeWeightedScore({
+      const { score, contributions, breakdown } = computeWeightedScore({
         document,
         normalizedQuery,
         tokens: matchTokens,
@@ -437,15 +522,25 @@ const rankGeneralResults = ({ companies, normalizedQuery, matchTokens, explicitC
       return {
         company: document.company,
         score: boostedScore,
-        reason: contributions.slice(0, 5).join('; '),
+        reason: '',
+        contributions,
+        breakdown,
+        semanticSimilarity,
+        keywordScore,
+        metadataScore,
       };
     })
     .filter((entry) => entry.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, SEARCH_LIMIT);
+    .sort((a, b) => b.score - a.score);
 
-  const topScore = ranked[0]?.score ?? 0;
-  return ranked.map((entry) => ({ ...entry, relevance_score: toRelevanceScore(entry.score, topScore) }));
+  const filteredRanked = applyLowRelevanceFilter(ranked, { explicitCompanies }).slice(0, SEARCH_LIMIT);
+
+  const topScore = filteredRanked[0]?.score ?? 0;
+  return filteredRanked.map((entry) => ({
+    ...entry,
+    relevance_score: toRelevanceScore(entry.score, topScore),
+    reason: formatReasonFromBreakdown(entry),
+  }));
 };
 
 const rankByMetric = ({ companies, metric, explicitDomainTerms, explicitCompanies }) => {
