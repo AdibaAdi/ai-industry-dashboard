@@ -1,7 +1,10 @@
 import { getCompanies } from '../../data/repositories/companyRepository.js';
 import { retrieveHybridCompanySignals } from '../retrieval/hybridCompanyRetrievalService.js';
+import { ensureCompanyVectorIndex, getVectorRetrievalInfo, searchCompanyVectors } from '../vector/vectorStoreService.js';
 
 const SEARCH_LIMIT = 6;
+const RAG_RETRIEVAL_LIMIT = 18;
+const RAG_CANDIDATE_LIMIT = 12;
 
 const INTENTS = {
   COMPANY_COMPARISON: 'company_comparison',
@@ -335,7 +338,68 @@ const buildDomainRankingSummary = (companies) => {
     .slice(0, 5);
 };
 
-const buildAnswer = ({ query, intent, rankedResults, explicitCompanies, comparisonAnalysis }) => {
+const uniqueCompaniesById = (companies) => {
+  const seen = new Set();
+  return companies.filter((company) => {
+    if (seen.has(company.id)) {
+      return false;
+    }
+    seen.add(company.id);
+    return true;
+  });
+};
+
+const retrieveRagCandidates = ({ companies, normalizedQuery, explicitCompanies, explicitDomainTerms }) => {
+  const byId = new Map(companies.map((company) => [company.id, company]));
+  const retrievalTrace = {
+    method: 'embedding_similarity',
+    requested_limit: RAG_RETRIEVAL_LIMIT,
+    retrieved_ids: [],
+    used_fallback: false,
+  };
+
+  try {
+    ensureCompanyVectorIndex(companies);
+    const matches = searchCompanyVectors(normalizedQuery, {
+      limit: RAG_RETRIEVAL_LIMIT,
+      minSimilarity: 0.05,
+    });
+
+    retrievalTrace.retrieved_ids = matches.map((entry) => entry.id);
+
+    const fromVectors = matches
+      .map((entry) => byId.get(entry.id))
+      .filter(Boolean);
+
+    const candidates = uniqueCompaniesById([
+      ...explicitCompanies,
+      ...fromVectors,
+    ]);
+
+    if (candidates.length) {
+      return {
+        candidates: candidates.slice(0, RAG_CANDIDATE_LIMIT),
+        retrievalTrace,
+      };
+    }
+  } catch {
+    retrievalTrace.used_fallback = true;
+  }
+
+  const fallback = explicitDomainTerms.length
+    ? companies.filter((company) => {
+        const domainTokens = new Set(tokenize(`${company.domain} ${company.subdomain} ${company.tags.join(' ')}`));
+        return explicitDomainTerms.some((token) => domainTokens.has(token));
+      })
+    : companies;
+
+  return {
+    candidates: uniqueCompaniesById([...explicitCompanies, ...fallback]).slice(0, RAG_CANDIDATE_LIMIT),
+    retrievalTrace: { ...retrievalTrace, used_fallback: true },
+  };
+};
+
+const buildAnswer = ({ query, intent, rankedResults, explicitCompanies, comparisonAnalysis, ragContext }) => {
   if (!rankedResults.length) {
     return `I could not find grounded matches for "${query}" in the current company dataset.`;
   }
@@ -347,7 +411,7 @@ const buildAnswer = ({ query, intent, rankedResults, explicitCompanies, comparis
 
   if (intent === INTENTS.CROWDED_DOMAIN) {
     const topDomain = rankedResults[0]?.company?.domain;
-    return `${topDomain} appears most crowded in the current dataset, based on concentration of relevant companies and score strength.`;
+    return `${topDomain} appears most crowded in the current dataset, based on concentration of retrieved companies and score strength.`;
   }
 
   if (intent === INTENTS.DOMAIN_RANKING) {
@@ -359,16 +423,22 @@ const buildAnswer = ({ query, intent, rankedResults, explicitCompanies, comparis
   }
 
   const topNames = rankedResults.slice(0, 3).map((result) => result.company.name);
-  return `Top matches for "${query}" are ${topNames.join(', ')}, selected for high relevance alignment and company score strength.`;
+  return `Top matches for "${query}" are ${topNames.join(', ')}, selected from ${ragContext.candidateCount} retrieved companies using embeddings plus score-strength reranking.`;
 };
 
-const buildStructuredSummary = ({ query, intent, rankedResults, explicitCompanies, comparisonAnalysis, domainRanking }) => {
+const buildStructuredSummary = ({ query, intent, rankedResults, explicitCompanies, comparisonAnalysis, domainRanking, ragContext }) => {
   if (!rankedResults.length) {
     return {
       key_finding: `No companies in the current dataset had strong relevance for "${query}".`,
       why_these_results_were_chosen: ['No candidates exceeded the relevance threshold.'],
       notable_trend: null,
+      domain_trend: null,
       limitations: 'Low confidence: query terms did not align well with tracked domains, tags, or company names.',
+      reasoning: [
+        `Retrieved ${ragContext.candidateCount} candidates from embedding search.`,
+        'Applied weighted relevance scoring over company profile fields and strength metrics.',
+        'No company passed the confidence threshold for grounded ranking.',
+      ],
     };
   }
 
@@ -387,10 +457,16 @@ const buildStructuredSummary = ({ query, intent, rankedResults, explicitCompanie
     })),
     why_these_results_were_chosen: topThree.map((entry) => `${entry.company.name}: ${entry.reason}.`),
     notable_trend: buildDomainTrend(rankedResults),
+    domain_trend: buildDomainTrend(rankedResults),
     limitations: lowConfidence
       ? 'Confidence is moderate-to-low because top relevance scores are close, so ranking separation is limited.'
       : 'Results are grounded in tracked company metadata and semantic similarity; external market changes are not included.',
     intent,
+    reasoning: [
+      `Embedded query and retrieved top ${ragContext.candidateCount} semantically similar companies from the vector index.`,
+      'Reranked candidates using domain/subdomain/tag/description matches and growth/influence/power signals.',
+      'Generated answer and summary strictly from retrieved candidates in the current dataset.',
+    ],
   };
 
   if (comparisonAnalysis) {
@@ -502,9 +578,9 @@ const rankGeneralResults = ({ companies, normalizedQuery, matchTokens, explicitC
       const { score, contributions, breakdown } = computeWeightedScore({
         document,
         normalizedQuery,
-        tokens: [],
+        tokens: matchTokens,
         explicitCompanies,
-        explicitDomainTerms: [],
+        explicitDomainTerms,
         semanticSimilarity,
       });
 
@@ -628,6 +704,12 @@ export const searchCompanies = (query) => {
   const explicitDomainTerms = effectiveTokens.filter((token) => DOMAIN_VOCABULARY.has(token));
   const explicitCompanies = extractExplicitCompanies(normalizedLower, companies);
   const intent = detectIntent(normalizedLower);
+  const { candidates: ragCandidates, retrievalTrace } = retrieveRagCandidates({
+    companies,
+    normalizedQuery: normalizedLower,
+    explicitCompanies,
+    explicitDomainTerms,
+  });
 
   let rankedResults = [];
 
@@ -640,14 +722,14 @@ export const searchCompanies = (query) => {
     }));
   } else if (intent === INTENTS.FASTEST_GROWING) {
     rankedResults = rankByMetric({
-      companies,
+      companies: ragCandidates.length ? ragCandidates : companies,
       metric: 'growth_score',
       explicitDomainTerms,
       explicitCompanies,
     });
   } else if (intent === INTENTS.STRONGEST) {
     rankedResults = rankByMetric({
-      companies,
+      companies: ragCandidates.length ? ragCandidates : companies,
       metric: 'power_score',
       explicitDomainTerms,
       explicitCompanies,
@@ -660,7 +742,7 @@ export const searchCompanies = (query) => {
 
     if (!rankedResults.length) {
       rankedResults = rankGeneralResults({
-        companies,
+        companies: ragCandidates.length ? ragCandidates : companies,
         normalizedQuery: normalizedLower,
         matchTokens: effectiveTokens,
         explicitCompanies,
@@ -669,7 +751,7 @@ export const searchCompanies = (query) => {
     }
   } else {
     rankedResults = rankGeneralResults({
-      companies,
+      companies: ragCandidates.length ? ragCandidates : companies,
       normalizedQuery: normalizedLower,
       matchTokens: effectiveTokens,
       explicitCompanies,
@@ -679,6 +761,12 @@ export const searchCompanies = (query) => {
 
   const comparisonAnalysis = intent === INTENTS.COMPANY_COMPARISON ? buildComparisonAnalysis(explicitCompanies) : null;
   const domainRanking = intent === INTENTS.DOMAIN_RANKING || intent === INTENTS.CROWDED_DOMAIN ? buildDomainRankingSummary(companies) : null;
+  const retrievalInfo = getVectorRetrievalInfo();
+  const ragContext = {
+    candidateCount: ragCandidates.length,
+    retrievalTrace,
+    retrievalInfo,
+  };
 
   return {
     query: normalizedQuery,
@@ -689,6 +777,7 @@ export const searchCompanies = (query) => {
       rankedResults,
       explicitCompanies,
       comparisonAnalysis,
+      ragContext,
     }),
     analysis: buildStructuredSummary({
       query: normalizedQuery,
@@ -697,6 +786,7 @@ export const searchCompanies = (query) => {
       explicitCompanies,
       comparisonAnalysis,
       domainRanking,
+      ragContext,
     }),
     results: rankedResults.map(({ company, reason, relevance_score }) => ({
       id: company.id,
@@ -712,5 +802,32 @@ export const searchCompanies = (query) => {
       matched_fields: buildMatchedFields(company, effectiveTokens),
     })),
     supporting_snippets: buildSnippets(rankedResults, normalizedQuery),
+    rag: {
+      grounded_in_dataset: true,
+      retrieval: {
+        strategy: 'embedding_top_k_then_rerank',
+        embedding_provider: retrievalInfo.provider,
+        embedding_dimensions: retrievalInfo.dimensions,
+        candidate_count: ragCandidates.length,
+        retrieved_company_ids: retrievalTrace.retrieved_ids,
+        fallback_used: retrievalTrace.used_fallback,
+      },
+      grounding: rankedResults.slice(0, 3).map(({ company, reason, relevance_score }) => ({
+        id: company.id,
+        name: company.name,
+        evidence: {
+          domain: company.domain,
+          subdomain: company.subdomain,
+          tags: company.tags,
+          scores: {
+            growth: company.growth_score,
+            influence: company.influence_score,
+            power: company.power_score,
+            relevance: relevance_score,
+          },
+        },
+        rationale: reason,
+      })),
+    },
   };
 };
