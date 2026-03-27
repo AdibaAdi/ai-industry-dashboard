@@ -10,6 +10,8 @@ const FIELD_WEIGHTS = {
   insights: 3,
 };
 
+const HIGHLIGHTABLE_FIELDS = ['domain', 'subdomain', 'tags', 'description'];
+
 const SEARCH_LIMIT = 6;
 
 const STOPWORDS = new Set([
@@ -162,6 +164,64 @@ const buildSnippets = (rankedResults, query) =>
     })
     .concat(`Search query interpreted as: "${query}".`);
 
+const sentenceCase = (value) => value.charAt(0).toUpperCase() + value.slice(1);
+
+const clip = (value, maxLength = 180) => {
+  if (!value || value.length <= maxLength) {
+    return value;
+  }
+  return `${value.slice(0, maxLength - 3)}...`;
+};
+
+const buildMatchedFields = (company, matchTokens) => {
+  const items = [];
+
+  for (const field of HIGHLIGHTABLE_FIELDS) {
+    const fieldValue =
+      field === 'tags'
+        ? company.tags.join(', ')
+        : field === 'description'
+          ? company.description
+          : company[field] ?? '';
+
+    const normalizedField = fieldValue.toLowerCase();
+    const matchedTerms = unique(matchTokens.filter((token) => normalizedField.includes(token)));
+
+    if (!matchedTerms.length) {
+      continue;
+    }
+
+    items.push({
+      field,
+      label: sentenceCase(field),
+      text: clip(fieldValue),
+      matched_terms: matchedTerms,
+    });
+  }
+
+  return items;
+};
+
+const buildDomainTrend = (rankedResults) => {
+  const topDomainCounts = rankedResults.reduce((accumulator, entry) => {
+    const key = entry.company.domain;
+    accumulator[key] = (accumulator[key] ?? 0) + 1;
+    return accumulator;
+  }, {});
+
+  const sortedDomains = Object.entries(topDomainCounts).sort((a, b) => b[1] - a[1]);
+  if (!sortedDomains.length) {
+    return null;
+  }
+
+  const [domain, count] = sortedDomains[0];
+  if (count < 2) {
+    return null;
+  }
+
+  return `${domain} appears frequently across top matches (${count}/${rankedResults.length}), suggesting concentrated momentum for this query.`;
+};
+
 const buildAnswer = (query, rankedResults) => {
   if (!rankedResults.length) {
     return `I could not find grounded matches for "${query}" in the current company dataset.`;
@@ -171,6 +231,32 @@ const buildAnswer = (query, rankedResults) => {
   const dominantDomain = rankedResults[0].company.domain;
 
   return `Based on the tracked dataset, ${topNames.join(', ')} are the strongest matches for "${query}". Top-ranked results cluster around ${dominantDomain} with strong power and relevance signals.`;
+};
+
+const buildStructuredSummary = (query, rankedResults) => {
+  if (!rankedResults.length) {
+    return {
+      key_finding: `No companies in the current dataset had strong relevance for "${query}".`,
+      strongest_matching_companies: [],
+      why_they_match: [],
+      domain_trend: null,
+    };
+  }
+
+  const topThree = rankedResults.slice(0, 3);
+
+  return {
+    key_finding: `Top-ranked companies combine strong relevance signals with high power scores, led by ${topThree[0].company.name}.`,
+    strongest_matching_companies: topThree.map((entry, index) => ({
+      rank: index + 1,
+      id: entry.company.id,
+      name: entry.company.name,
+      domain: entry.company.domain,
+      power_score: entry.company.power_score,
+    })),
+    why_they_match: topThree.map((entry) => `${entry.company.name}: ${entry.reason}.`),
+    domain_trend: buildDomainTrend(rankedResults),
+  };
 };
 
 export const searchCompanies = (query) => {
@@ -207,12 +293,16 @@ export const searchCompanies = (query) => {
   return {
     query: normalizedQuery,
     answer: buildAnswer(normalizedQuery, ranked),
+    analysis: buildStructuredSummary(normalizedQuery, ranked),
     results: ranked.map(({ company, reason }) => ({
       id: company.id,
       name: company.name,
       domain: company.domain,
+      subdomain: company.subdomain,
+      tags: company.tags,
       power_score: company.power_score,
       reason,
+      matched_fields: buildMatchedFields(company, matchTokens),
     })),
     supporting_snippets: buildSnippets(ranked, normalizedQuery),
   };

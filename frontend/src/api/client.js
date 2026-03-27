@@ -23,6 +23,12 @@ export const apiClient = {
     return parseJson(response);
   },
 
+  async getCompanyById(companyId) {
+    const response = await fetch(`${API_BASE_URL}/companies/${companyId}`);
+    const payload = await parseJson(response);
+    return payload.data;
+  },
+
   async getDomains() {
     const response = await fetch(`${API_BASE_URL}/domains`);
     return parseJson(response);
@@ -47,6 +53,7 @@ export const apiClient = {
 
   async getCompanyInsight(companyId) {
     const response = await fetch(`${API_BASE_URL}/companies/${companyId}/insight`);
-    return parseJson(response);
+    const payload = await parseJson(response);
+    return payload.data;
   },
 };

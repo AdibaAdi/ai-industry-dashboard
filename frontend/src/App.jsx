@@ -62,7 +62,13 @@ const App = () => {
       case 'Insights':
         return <InsightsPage compactMode={compactMode} insights={intelligenceData.insights} />;
       case 'Ask AI':
-        return <AskAIPage compactMode={compactMode} />;
+        return (
+          <AskAIPage
+            compactMode={compactMode}
+            companies={intelligenceData.companies}
+            onNavigate={setActiveSection}
+          />
+        );
       case 'Settings':
         return <SettingsPage settings={appSettings} compactMode={compactMode} />;
       case 'Dashboard':
