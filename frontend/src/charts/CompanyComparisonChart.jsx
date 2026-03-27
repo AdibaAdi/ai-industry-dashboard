@@ -1,12 +1,5 @@
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import SectionHeading from '../components/SectionHeading';
 
 const companyData = [
   { company: 'OpenAI', valuation: 86, employees: 3500 },
@@ -16,28 +9,27 @@ const companyData = [
   { company: 'Hugging Face', valuation: 5, employees: 400 },
 ];
 
-const CompanyComparisonChart = () => {
+const CompanyComparisonChart = ({ chartAnimations }) => {
   return (
-    <section className="rounded-2xl border border-dashboard-border bg-dashboard-card p-5 shadow-card">
-      <h2 className="mb-4 text-lg font-semibold text-slate-100">Company Comparison</h2>
-      <p className="mb-4 text-sm text-dashboard-muted">Mock valuation data (USD billions)</p>
-      <div className="h-80 rounded-xl bg-slate-900/40 p-3">
+    <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
+      <SectionHeading title="Company Comparison" subtitle="Mock valuation data (USD billions)" />
+      <div className="h-80 rounded-xl bg-theme-chart p-3">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={companyData} margin={{ top: 12, right: 16, left: -12, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-            <XAxis dataKey="company" stroke="#94a3b8" tickLine={false} axisLine={false} />
-            <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--theme-grid)" />
+            <XAxis dataKey="company" stroke="var(--theme-muted)" tickLine={false} axisLine={false} />
+            <YAxis stroke="var(--theme-muted)" tickLine={false} axisLine={false} />
             <Tooltip
               formatter={(value) => [`$${value}B`, 'Valuation']}
               contentStyle={{
-                border: '1px solid #334155',
+                border: '1px solid var(--theme-border)',
                 borderRadius: '0.75rem',
-                backgroundColor: '#0f172acc',
-                color: '#e2e8f0',
+                backgroundColor: 'var(--theme-tooltip)',
+                color: 'var(--theme-primary)',
               }}
-              cursor={{ fill: '#1e293b88' }}
+              cursor={{ fill: 'var(--theme-grid-fade)' }}
             />
-            <Bar dataKey="valuation" radius={[8, 8, 0, 0]} fill="#818cf8" />
+            <Bar isAnimationActive={chartAnimations} dataKey="valuation" radius={[8, 8, 0, 0]} fill="var(--theme-purple)" />
           </BarChart>
         </ResponsiveContainer>
       </div>

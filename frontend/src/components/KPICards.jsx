@@ -8,13 +8,10 @@ const KPICards = () => {
   return (
     <section className="grid gap-4 md:grid-cols-3">
       {kpis.map((kpi) => (
-        <article
-          key={kpi.label}
-          className="rounded-2xl border border-dashboard-border bg-dashboard-card p-5 shadow-card"
-        >
-          <p className="text-sm text-dashboard-muted">{kpi.label}</p>
-          <p className="mt-3 text-3xl font-semibold text-slate-50">{kpi.value}</p>
-          <p className="mt-2 text-sm text-emerald-300">{kpi.trend}</p>
+        <article key={kpi.label} className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
+          <p className="text-sm text-theme-muted">{kpi.label}</p>
+          <p className="mt-3 text-3xl font-semibold tracking-tight text-theme-primary">{kpi.value}</p>
+          <p className="mt-2 text-sm text-emerald-400">{kpi.trend}</p>
         </article>
       ))}
     </section>

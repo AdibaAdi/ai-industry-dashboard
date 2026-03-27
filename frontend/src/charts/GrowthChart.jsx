@@ -1,12 +1,5 @@
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import SectionHeading from '../components/SectionHeading';
 
 const growthData = [
   { month: 'Jan', startups: 120 },
@@ -18,31 +11,32 @@ const growthData = [
   { month: 'Jul', startups: 226 },
 ];
 
-const GrowthChart = () => {
+const GrowthChart = ({ chartAnimations }) => {
   return (
-    <section className="rounded-2xl border border-dashboard-border bg-dashboard-card p-5 shadow-card">
-      <h2 className="mb-4 text-lg font-semibold text-slate-100">Growth Trend</h2>
-      <div className="h-72 rounded-xl bg-slate-900/40 p-3">
+    <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
+      <SectionHeading title="Growth Trend" subtitle="Monthly tracked startup velocity across the sector" />
+      <div className="h-72 rounded-xl bg-theme-chart p-3">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={growthData} margin={{ top: 16, right: 18, left: -10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-            <XAxis dataKey="month" stroke="#94a3b8" tickLine={false} axisLine={false} />
-            <YAxis stroke="#94a3b8" tickLine={false} axisLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--theme-grid)" />
+            <XAxis dataKey="month" stroke="var(--theme-muted)" tickLine={false} axisLine={false} />
+            <YAxis stroke="var(--theme-muted)" tickLine={false} axisLine={false} />
             <Tooltip
               contentStyle={{
-                border: '1px solid #334155',
+                border: '1px solid var(--theme-border)',
                 borderRadius: '0.75rem',
-                backgroundColor: '#0f172acc',
-                color: '#e2e8f0',
+                backgroundColor: 'var(--theme-tooltip)',
+                color: 'var(--theme-primary)',
               }}
-              labelStyle={{ color: '#e2e8f0' }}
+              labelStyle={{ color: 'var(--theme-primary)' }}
             />
             <Line
+              isAnimationActive={chartAnimations}
               type="monotone"
               dataKey="startups"
-              stroke="#22d3ee"
+              stroke="var(--theme-accent)"
               strokeWidth={3}
-              dot={{ r: 4, fill: '#22d3ee' }}
+              dot={{ r: 4, fill: 'var(--theme-accent)' }}
               activeDot={{ r: 6 }}
             />
           </LineChart>
