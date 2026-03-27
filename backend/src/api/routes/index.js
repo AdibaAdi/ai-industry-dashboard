@@ -1,5 +1,6 @@
 import { getCompaniesHandler, getCompanyByIdHandler } from '../controllers/companyController.js';
 import { getDomainsHandler } from '../controllers/domainController.js';
+import { postIngestCompaniesHandler, postSimulateIngestionHandler } from '../controllers/ingestionController.js';
 import { getHealthHandler } from '../controllers/healthController.js';
 import { getCompanyInsightHandler, getInsightsHandler } from '../controllers/insightController.js';
 import { postSearchHandler } from '../controllers/searchController.js';
@@ -12,6 +13,8 @@ const routes = [
   { method: 'GET', path: '/domains', handler: getDomainsHandler },
   { method: 'GET', path: '/insights', handler: getInsightsHandler },
   { method: 'POST', path: '/search', handler: postSearchHandler },
+  { method: 'POST', path: '/dev/ingestion', handler: postIngestCompaniesHandler },
+  { method: 'POST', path: '/dev/ingestion/simulate', handler: postSimulateIngestionHandler },
 ];
 
 const toSegments = (value) => value.split('/').filter(Boolean);

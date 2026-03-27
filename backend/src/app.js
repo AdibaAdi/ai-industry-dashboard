@@ -32,12 +32,12 @@ export const createAppServer = () =>
       }
     }
 
-    const { statusCode, payload } = route.handler({
+    const response = await route.handler({
       pathname,
       searchParams,
       params: route.params,
       body,
     });
 
-    sendJson(res, statusCode, payload);
+    sendJson(res, response.statusCode, response.payload);
   });
