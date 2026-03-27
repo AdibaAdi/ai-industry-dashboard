@@ -1,4 +1,4 @@
-const navItems = ['Dashboard', 'Companies', 'Domains', 'Insights', 'Settings'];
+const navItems = ['Dashboard', 'Companies', 'Domains', 'Insights', 'Ask AI', 'Settings'];
 
 const Sidebar = ({ activeItem, onSelectItem }) => {
   return (

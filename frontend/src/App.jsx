@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import CompaniesPage from './pages/CompaniesPage';
 import DomainsPage from './pages/DomainsPage';
 import InsightsPage from './pages/InsightsPage';
+import AskAIPage from './pages/AskAIPage';
 import SettingsPage from './pages/SettingsPage';
 import { useDashboardData } from './hooks/useDashboardData';
 
@@ -60,6 +61,8 @@ const App = () => {
         return <DomainsPage compactMode={compactMode} domains={intelligenceData.domains} />;
       case 'Insights':
         return <InsightsPage compactMode={compactMode} insights={intelligenceData.insights} />;
+      case 'Ask AI':
+        return <AskAIPage compactMode={compactMode} />;
       case 'Settings':
         return <SettingsPage settings={appSettings} compactMode={compactMode} />;
       case 'Dashboard':

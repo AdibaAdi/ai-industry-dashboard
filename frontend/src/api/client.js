@@ -32,4 +32,21 @@ export const apiClient = {
     const response = await fetch(`${API_BASE_URL}/insights`);
     return parseJson(response);
   },
+
+  async searchCompanies(query) {
+    const response = await fetch(`${API_BASE_URL}/search`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
+    });
+
+    return parseJson(response);
+  },
+
+  async getCompanyInsight(companyId) {
+    const response = await fetch(`${API_BASE_URL}/companies/${companyId}/insight`);
+    return parseJson(response);
+  },
 };
