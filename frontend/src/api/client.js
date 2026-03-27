@@ -39,6 +39,11 @@ export const apiClient = {
     return parseJson(response);
   },
 
+  async getInvestorMode() {
+    const response = await fetch(`${API_BASE_URL}/investor-mode`);
+    return parseJson(response);
+  },
+
   async searchCompanies(query) {
     const params = new URLSearchParams({ q: query });
     const response = await fetch(`${API_BASE_URL}/search?${params.toString()}`);
