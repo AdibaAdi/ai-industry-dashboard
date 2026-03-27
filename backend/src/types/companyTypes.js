@@ -3,6 +3,10 @@
  */
 
 /**
+ * @typedef {'seeded'|'received'|'normalized'|'enriched'|'classified'|'scored'|'persisted'|'failed'} IngestionStatus
+ */
+
+/**
  * @typedef {Object} AICompany
  * @property {string} id
  * @property {string} name
@@ -21,6 +25,11 @@
  * @property {string[]} source_urls
  * @property {string[]} tags
  * @property {string} last_updated
+ * @property {string} created_at
+ * @property {string} updated_at
+ * @property {IngestionStatus} ingestion_status
+ * @property {number} confidence_score
+ * @property {string} data_source
  */
 
 export const companyTypeSchema = Object.freeze(['Private', 'Public', 'Subsidiary', 'Nonprofit']);
