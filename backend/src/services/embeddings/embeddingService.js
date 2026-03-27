@@ -38,23 +38,69 @@ const embedTextWithHashing = (text, dimensions = DEFAULT_DIMENSIONS) => {
   return normalize(vector);
 };
 
-export const createHashingEmbeddingService = (options = {}) => {
+const validateProvider = (provider) => {
+  if (!provider || typeof provider !== 'object') {
+    throw new Error('Embedding provider must be an object.');
+  }
+
+  const isValid = typeof provider.name === 'string' && typeof provider.dimensions === 'number' && typeof provider.embedText === 'function';
+  if (!isValid) {
+    throw new Error('Embedding provider must define name, dimensions, and embedText(text).');
+  }
+};
+
+export const createHashingEmbeddingProvider = (options = {}) => {
   const dimensions = options.dimensions ?? DEFAULT_DIMENSIONS;
 
   return {
-    provider: 'hashing-v1',
+    name: 'hashing-v1',
     dimensions,
     embedText: (text) => embedTextWithHashing(text, dimensions),
     embedBatch: (items) => items.map((item) => embedTextWithHashing(item, dimensions)),
   };
 };
 
-export const createEmbeddingService = (options = {}) => {
-  const provider = options.provider ?? 'hashing-v1';
+export const createEmbeddingProviderRegistry = (options = {}) => {
+  const providers = new Map();
 
-  if (provider === 'hashing-v1') {
-    return createHashingEmbeddingService(options);
+  const hashingProvider = createHashingEmbeddingProvider(options.hashing ?? options);
+  providers.set(hashingProvider.name, hashingProvider);
+
+  return {
+    register(provider) {
+      validateProvider(provider);
+      providers.set(provider.name, provider);
+    },
+    get(providerName) {
+      return providers.get(providerName) ?? null;
+    },
+    has(providerName) {
+      return providers.has(providerName);
+    },
+  };
+};
+
+export const createEmbeddingService = (options = {}) => {
+  const registry = options.registry ?? createEmbeddingProviderRegistry(options);
+  const providerName = options.provider ?? 'hashing-v1';
+  const provider = registry.get(providerName);
+
+  if (!provider) {
+    throw new Error(`Unsupported embedding provider: ${providerName}`);
   }
 
-  throw new Error(`Unsupported embedding provider: ${provider}`);
+  return {
+    provider: provider.name,
+    dimensions: provider.dimensions,
+    embedText(text) {
+      return provider.embedText(text);
+    },
+    embedBatch(items) {
+      if (typeof provider.embedBatch === 'function') {
+        return provider.embedBatch(items);
+      }
+
+      return items.map((item) => provider.embedText(item));
+    },
+  };
 };

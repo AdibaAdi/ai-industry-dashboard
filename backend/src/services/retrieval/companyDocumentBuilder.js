@@ -1,3 +1,5 @@
+import { buildCompanyInsight } from '../insight/companyInsightService.js';
+
 const trendLabel = (company) => {
   if (company.growth_score >= 90) {
     return 'accelerating';
@@ -10,10 +12,31 @@ const trendLabel = (company) => {
   return 'emerging';
 };
 
-const generatedInsightText = (company) => {
+const fallbackInsightText = (company) => {
   const summary = `${company.name} in ${company.domain}/${company.subdomain} has power ${company.power_score.toFixed(1)} with growth ${company.growth_score.toFixed(1)} and influence ${company.influence_score.toFixed(1)}.`;
   const trend = `${company.name} trend signal: ${trendLabel(company)} momentum.`;
   return `${summary} ${trend}`;
+};
+
+const generatedInsightText = (company) => {
+  const companyInsight = buildCompanyInsight(company.id);
+
+  if (!companyInsight) {
+    return fallbackInsightText(company);
+  }
+
+  const strengths = companyInsight.strengths?.join(' ') ?? '';
+  const risks = companyInsight.risks?.join(' ') ?? '';
+
+  return [
+    companyInsight.summary,
+    `Trend: ${companyInsight.trend}.`,
+    `Strengths: ${strengths}`,
+    `Risks: ${risks}`,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
 };
 
 const asText = (company) => {
