@@ -1,4 +1,5 @@
 import { getCompanies } from '../../data/repositories/companyRepository.js';
+import { ensureCompanyVectorIndex, searchCompanyVectors } from '../vector/vectorStoreService.js';
 
 const FIELD_WEIGHTS = {
   name: 8,
@@ -275,14 +276,32 @@ export const searchCompanies = (query) => {
   const intentTokens = tokens.filter((token) => !STOPWORDS.has(token));
   const matchTokens = intentTokens.length ? intentTokens : tokens;
   const explicitDomainTerms = intentTokens.filter((token) => DOMAIN_VOCABULARY.has(token));
+  const companies = getCompanies();
+  let semanticScoreById = new Map();
 
-  const ranked = getCompanies()
+  try {
+    ensureCompanyVectorIndex(companies);
+    const semanticMatches = searchCompanyVectors(normalizedQuery, { limit: 16, minSimilarity: 0.08 });
+    semanticScoreById = new Map(semanticMatches.map((entry) => [entry.id, entry.score]));
+  } catch {
+    semanticScoreById = new Map();
+  }
+
+  const ranked = companies
     .map((company) => toSearchDocument(company))
     .map((document) => {
       const { score, contributions } = scoreDocument(document, normalizedQuery, matchTokens, intentTokens, explicitDomainTerms);
+      const semanticSimilarity = semanticScoreById.get(document.company.id) ?? 0;
+      const semanticBoost = semanticSimilarity * 24;
+      const totalScore = score + semanticBoost;
+
+      if (semanticBoost > 0) {
+        contributions.push(`semantic similarity (+${semanticBoost.toFixed(1)})`);
+      }
+
       return {
         company: document.company,
-        score,
+        score: totalScore,
         reason: contributions.slice(0, 3).join('; '),
       };
     })
