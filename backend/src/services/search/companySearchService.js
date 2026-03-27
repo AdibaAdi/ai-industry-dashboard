@@ -1,5 +1,5 @@
 import { getCompanies } from '../../data/repositories/companyRepository.js';
-import { ensureCompanyVectorIndex, searchCompanyVectors } from '../vector/vectorStoreService.js';
+import { retrieveHybridCompanySignals } from '../retrieval/hybridCompanyRetrievalService.js';
 
 const SEARCH_LIMIT = 6;
 
@@ -398,20 +398,23 @@ const buildSnippets = (rankedResults, query) =>
     .concat(`Search query interpreted as: "${query}".`);
 
 const rankGeneralResults = ({ companies, normalizedQuery, matchTokens, explicitCompanies, explicitDomainTerms }) => {
-  let semanticScoreById = new Map();
+  const metadataFilter = explicitDomainTerms.length ? { tags: explicitDomainTerms } : {};
 
-  try {
-    ensureCompanyVectorIndex(companies);
-    const semanticMatches = searchCompanyVectors(normalizedQuery, { limit: 20, minSimilarity: 0.08 });
-    semanticScoreById = new Map(semanticMatches.map((entry) => [entry.id, entry.score]));
-  } catch {
-    semanticScoreById = new Map();
-  }
+  const hybridSignals = retrieveHybridCompanySignals({
+    companies,
+    query: normalizedQuery,
+    tokens: matchTokens,
+    metadataFilter,
+    semanticOptions: { limit: 20, minSimilarity: 0.08 },
+  });
 
   const ranked = companies
     .map((company) => toSearchDocument(company))
     .map((document) => {
-      const semanticSimilarity = semanticScoreById.get(document.company.id) ?? 0;
+      const semanticSimilarity = hybridSignals.semanticScores.get(document.company.id) ?? 0;
+      const keywordScore = hybridSignals.keywordScores.get(document.company.id) ?? 0;
+      const metadataScore = hybridSignals.metadataScores.get(document.company.id) ?? 0;
+
       const { score, contributions } = computeWeightedScore({
         document,
         normalizedQuery,
@@ -421,10 +424,20 @@ const rankGeneralResults = ({ companies, normalizedQuery, matchTokens, explicitC
         semanticSimilarity,
       });
 
+      const hybridBoost = keywordScore * 3 + metadataScore * 4;
+      const boostedScore = score + hybridBoost;
+      if (hybridBoost > 0) {
+        contributions.push(`hybrid retrieval boost (+${hybridBoost.toFixed(1)})`);
+      }
+
+      if (hybridSignals.retrieval.usedFallback) {
+        contributions.push('semantic retrieval fallback to keyword and metadata signals');
+      }
+
       return {
         company: document.company,
-        score,
-        reason: contributions.slice(0, 4).join('; '),
+        score: boostedScore,
+        reason: contributions.slice(0, 5).join('; '),
       };
     })
     .filter((entry) => entry.score > 0)

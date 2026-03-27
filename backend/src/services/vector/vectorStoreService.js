@@ -1,8 +1,16 @@
 import { createEmbeddingService } from '../embeddings/embeddingService.js';
 import { buildCompanyDocuments } from '../retrieval/companyDocumentBuilder.js';
-import { InMemoryVectorStore } from './inMemoryVectorStore.js';
+import { createInMemoryVectorStore } from './inMemoryVectorStore.js';
 
-const vectorStore = new InMemoryVectorStore();
+const createVectorStore = (provider = 'memory') => {
+  if (provider === 'memory') {
+    return createInMemoryVectorStore();
+  }
+
+  throw new Error(`Unsupported vector store provider: ${provider}`);
+};
+
+const vectorStore = createVectorStore();
 const embeddingService = createEmbeddingService();
 
 let indexedSignature = null;

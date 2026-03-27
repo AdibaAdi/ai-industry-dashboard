@@ -20,6 +20,32 @@ const cosineSimilarity = (left, right) => {
   return dot / (Math.sqrt(leftMagnitude) * Math.sqrt(rightMagnitude));
 };
 
+const matchesMetadata = (entryMetadata, filter = {}) => {
+  const conditions = Object.entries(filter);
+
+  if (!conditions.length) {
+    return true;
+  }
+
+  return conditions.every(([key, expected]) => {
+    const actual = entryMetadata?.[key];
+
+    if (Array.isArray(expected)) {
+      if (Array.isArray(actual)) {
+        return expected.some((value) => actual.includes(value));
+      }
+
+      return expected.includes(actual);
+    }
+
+    if (Array.isArray(actual)) {
+      return actual.includes(expected);
+    }
+
+    return actual === expected;
+  });
+};
+
 export class InMemoryVectorStore {
   constructor() {
     this.entries = new Map();
@@ -38,8 +64,10 @@ export class InMemoryVectorStore {
   searchByVector(vector, options = {}) {
     const limit = options.limit ?? 8;
     const minSimilarity = options.minSimilarity ?? 0;
+    const metadataFilter = options.metadataFilter ?? {};
 
     return [...this.entries.values()]
+      .filter((entry) => matchesMetadata(entry.metadata, metadataFilter))
       .map((item) => ({
         id: item.id,
         score: cosineSimilarity(vector, item.vector),
@@ -51,3 +79,5 @@ export class InMemoryVectorStore {
       .slice(0, limit);
   }
 }
+
+export const createInMemoryVectorStore = () => new InMemoryVectorStore();
