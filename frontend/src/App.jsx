@@ -73,7 +73,13 @@ const App = () => {
       case 'Domains':
         return <DomainsPage compactMode={compactMode} domains={intelligenceData.domains} />;
       case 'Insights':
-        return <InsightsPage compactMode={compactMode} insights={intelligenceData.insights} />;
+        return (
+          <InsightsPage
+            compactMode={compactMode}
+            insights={intelligenceData.insights}
+            onOpenCompany={openCompanyDetail}
+          />
+        );
       case 'Investor Mode':
         return (
           <InvestorModePage
