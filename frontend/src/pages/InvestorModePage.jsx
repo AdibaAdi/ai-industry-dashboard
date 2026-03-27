@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import ScoringHowItWorksModal from '../components/ScoringHowItWorksModal';
+import ScoreInfoTooltip from '../components/ScoreInfoTooltip';
 import SectionHeading from '../components/SectionHeading';
 
 const scoreTone = (value) => {
@@ -7,6 +10,7 @@ const scoreTone = (value) => {
 };
 
 const InvestorModePage = ({ compactMode, investorMode, loading, onOpenCompany }) => {
+  const [showScoringModal, setShowScoringModal] = useState(false);
   const topStartups = investorMode?.top_emerging_startups ?? [];
   const risingByDomain = investorMode?.rising_companies_by_domain ?? [];
   const sectorMomentum = investorMode?.highest_momentum_sectors ?? [];
@@ -19,6 +23,15 @@ const InvestorModePage = ({ compactMode, investorMode, loading, onOpenCompany })
         <SectionHeading
           title="Investor Mode"
           subtitle="Signal-driven intelligence on emerging AI startups, momentum sectors, and under-the-radar opportunities."
+          action={
+            <button
+              type="button"
+              onClick={() => setShowScoringModal(true)}
+              className="rounded-lg border border-theme-border bg-theme-chart px-4 py-2 text-sm font-medium text-theme-accent transition hover:border-theme-accent hover:text-theme-primary"
+            >
+              How scoring works
+            </button>
+          }
         />
         <p className="text-sm text-theme-muted">
           Derived investor_score blends growth, influence, power, domain momentum, underexposure, and recency weighting.
@@ -33,7 +46,12 @@ const InvestorModePage = ({ compactMode, investorMode, loading, onOpenCompany })
               <tr className="border-b border-theme-border text-left text-theme-muted">
                 <th className="pb-3 font-medium">Company</th>
                 <th className="pb-3 font-medium">Domain</th>
-                <th className="pb-3 font-medium">Investor Score</th>
+                <th className="pb-3 font-medium">
+                  <span className="inline-flex items-center">
+                    Investor Score
+                    <ScoreInfoTooltip scoreKey="investor" />
+                  </span>
+                </th>
                 <th className="pb-3 font-medium">Why flagged</th>
               </tr>
             </thead>
@@ -130,6 +148,12 @@ const InvestorModePage = ({ compactMode, investorMode, loading, onOpenCompany })
           ))}
         </ul>
       </section>
+
+      <ScoringHowItWorksModal
+        isOpen={showScoringModal}
+        onClose={() => setShowScoringModal(false)}
+        scoreKeys={['investor', 'power', 'growth', 'influence']}
+      />
     </main>
   );
 };
