@@ -44,10 +44,10 @@ const renderActiveShape = ({ outerRadius, ...shapeProps }) => (
   <Sector
     {...shapeProps}
     outerRadius={outerRadius + 6}
-    stroke="rgba(255, 255, 255, 0.55)"
+    stroke="var(--theme-domain-active-stroke)"
     strokeWidth={3}
     style={{
-      filter: 'drop-shadow(0 0 10px rgba(34, 211, 238, 0.35))',
+      filter: 'drop-shadow(var(--theme-domain-active-shadow))',
       transition: 'all 200ms ease',
     }}
   />
@@ -96,7 +96,7 @@ const DomainDistributionChart = ({ chartAnimations, domainData }) => {
                   fillOpacity={activeIndex === -1 || activeIndex === index ? 1 : 0.45}
                   style={{
                     transition: 'fill-opacity 220ms ease, filter 220ms ease',
-                    filter: activeIndex === index ? 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.25))' : 'none',
+                    filter: activeIndex === index ? 'drop-shadow(var(--theme-domain-cell-hover-shadow))' : 'none',
                   }}
                 />
               ))}
