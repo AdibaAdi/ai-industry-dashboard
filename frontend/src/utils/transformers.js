@@ -1,3 +1,5 @@
+import { buildYearSeries } from './yearSeries';
+
 export const toDomainChartData = (domains) => domains.map((item) => ({ name: item.domain, value: item.total_companies }));
 
 export const toTopCompanies = (companies, count = 6) =>
@@ -23,14 +25,27 @@ export const toComparisonData = (companies, count = 5) =>
     }));
 
 export const toGrowthTrendData = (companies) => {
+  const currentYear = new Date().getFullYear();
+  const foundedYears = companies
+    .map((company) => Number(company.founded_year))
+    .filter((year) => Number.isInteger(year) && year > 0);
+
+  const startYear = foundedYears.length > 0 ? Math.min(...foundedYears) : currentYear;
+  const endYear = Math.max(currentYear, foundedYears.length > 0 ? Math.max(...foundedYears) : currentYear);
+
   const yearlyBuckets = companies.reduce((acc, company) => {
-    const year = company.founded_year;
+    const year = Number(company.founded_year);
+
+    if (!Number.isInteger(year) || year < startYear || year > endYear) {
+      return acc;
+    }
+
     acc[year] = (acc[year] || 0) + 1;
     return acc;
   }, {});
 
-  return Object.entries(yearlyBuckets)
-    .sort((a, b) => Number(a[0]) - Number(b[0]))
-    .slice(-8)
-    .map(([year, startups]) => ({ month: year, startups }));
+  return buildYearSeries(startYear, endYear).map((year) => ({
+    month: String(year),
+    startups: yearlyBuckets[year] ?? 0,
+  }));
 };
