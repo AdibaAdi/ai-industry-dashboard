@@ -9,7 +9,15 @@ const GrowthChart = ({ chartAnimations, growthData }) => {
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={growthData} margin={{ top: 16, right: 18, left: -10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--theme-grid)" />
-            <XAxis dataKey="month" stroke="var(--theme-muted)" tickLine={false} axisLine={false} />
+            <XAxis
+              dataKey="month"
+              stroke="var(--theme-muted)"
+              tickLine={false}
+              axisLine={false}
+              minTickGap={28}
+              interval="preserveStartEnd"
+              tickMargin={8}
+            />
             <YAxis stroke="var(--theme-muted)" tickLine={false} axisLine={false} />
             <Tooltip
               contentStyle={{
