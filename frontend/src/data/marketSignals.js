@@ -42,6 +42,48 @@ const MOCK_PUBLIC_MARKET_FEED = {
   },
 };
 
+const TREND_POINTS = 14;
+
+const createSeededRng = (seed) => {
+  let state = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    state = (state * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+
+  if (state === 0) {
+    state = 0x9e3779b9;
+  }
+
+  return () => {
+    state = (1664525 * state + 1013904223) >>> 0;
+    return state / 2 ** 32;
+  };
+};
+
+const buildSimulatedTrend = ({ companyId, latestPrice, points = TREND_POINTS }) => {
+  if (!Number.isFinite(latestPrice) || latestPrice <= 0) {
+    return [];
+  }
+
+  const random = createSeededRng(companyId);
+  const biasSelector = random();
+  const driftPercent = biasSelector < 0.33 ? -0.007 : biasSelector > 0.66 ? 0.007 : 0;
+  const volatilityPercent = 0.004 + random() * 0.014;
+  const phaseOffset = random() * Math.PI * 2;
+  const prices = [latestPrice];
+
+  for (let index = points - 1; index > 0; index -= 1) {
+    const oscillation = Math.sin((index / (points - 1)) * Math.PI * 2 + phaseOffset) * 0.004;
+    const randomShock = (random() - 0.5) * volatilityPercent;
+    const changePercent = driftPercent + oscillation + randomShock;
+    const previousPrice = prices[0] / (1 + changePercent);
+    prices.unshift(Math.max(0.1, Number(previousPrice.toFixed(2))));
+  }
+
+  prices[prices.length - 1] = Number(latestPrice.toFixed(2));
+  return prices;
+};
+
 const formatTrendSeries = (trend = []) => trend.map((value, index) => ({ point: `T-${trend.length - index - 1}`, price: value }));
 
 export const getMarketSignalForCompany = (companyId) => {
@@ -51,9 +93,15 @@ export const getMarketSignalForCompany = (companyId) => {
     return null;
   }
 
+  const trend = buildSimulatedTrend({
+    companyId,
+    latestPrice: signal.price,
+  });
+
   return {
     ...signal,
-    trendSeries: formatTrendSeries(signal.trend),
+    trend,
+    trendSeries: formatTrendSeries(trend),
     source: MOCK_PUBLIC_MARKET_FEED.source,
     asOf: MOCK_PUBLIC_MARKET_FEED.asOf,
   };
