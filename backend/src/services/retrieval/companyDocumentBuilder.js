@@ -24,6 +24,19 @@ const toJoinedText = (value, fallback = 'None') => {
   return fallback;
 };
 
+const toArray = (value) => {
+  if (Array.isArray(value)) {
+    return value.filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+
+  return [];
+};
+
 const fallbackInsight = (company) => ({
   summary: `${company.name} in ${company.domain}/${company.subdomain} has power ${company.power_score.toFixed(1)} with growth ${company.growth_score.toFixed(1)} and influence ${company.influence_score.toFixed(1)}.`,
   trend: `${trendLabel(company)} momentum`,
@@ -46,10 +59,13 @@ const getDocumentSignals = (company) => {
     ?? company.market_signals
     ?? null;
 
+  const strengths = toArray(company.strengths);
+  const risks = toArray(company.risks);
+
   return {
-    trend: insight.trend ?? trendLabel(company),
-    strengths: insight.strengths ?? [],
-    risks: insight.risks ?? [],
+    trend: company.trend ?? insight.trend ?? trendLabel(company),
+    strengths: strengths.length ? strengths : (insight.strengths ?? []),
+    risks: risks.length ? risks : (insight.risks ?? []),
     summary: insight.summary ?? '',
     investorNotes,
     marketNotes,
