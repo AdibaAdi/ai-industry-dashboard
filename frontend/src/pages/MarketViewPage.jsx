@@ -1,5 +1,5 @@
 import SectionHeading from '../components/SectionHeading';
-import { Line, LineChart, ResponsiveContainer } from 'recharts';
+import { Line, LineChart, ResponsiveContainer, YAxis } from 'recharts';
 import { getMarketFeedMeta, getPrivateMarketCompanies, getPublicMarketCompanies } from '../data/marketSignals';
 
 const currency = new Intl.NumberFormat('en-US', {
@@ -28,11 +28,17 @@ const PriceTrendSparkline = ({ data }) => {
   const firstPrice = data[0].price;
   const lastPrice = data[data.length - 1].price;
   const isPositive = lastPrice >= firstPrice;
+  const prices = data.map(({ price }) => price);
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const dynamicPadding = Math.max((maxPrice - minPrice) * 0.2, maxPrice * 0.01, 0.1);
+  const chartDomain = [Math.max(minPrice - dynamicPadding, 0), maxPrice + dynamicPadding];
 
   return (
     <div className="h-16 w-full rounded-lg bg-theme-chart px-1 py-1">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data}>
+          <YAxis domain={chartDomain} hide />
           <Line
             type="monotone"
             dataKey="price"
@@ -76,6 +82,7 @@ const MarketViewPage = ({ compactMode, companies, onOpenCompany }) => {
           </p>
           <p className="text-xs text-theme-muted">Snapshot as of {new Date(marketFeedMeta.asOf).toLocaleString()}</p>
         </div>
+        <p className="mb-4 text-xs italic text-theme-muted">Simulated trend for demo (real API integration pending)</p>
 
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
