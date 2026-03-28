@@ -129,19 +129,29 @@ test('confidence badge metadata and tooltip copy use API confidence values', () 
 test('ask AI result view model exposes backend response fields used by the UI', () => {
   const viewModel = buildAskAIResultViewModel({
     answer: 'Infrastructure leaders are outpacing peers.',
-    intent: 'company_comparison',
-    analysis: {
-      key_finding: 'Beta Compute has the strongest combined signal.',
-      strongest_matching_companies: [{ id: 'c2', rank: 1, name: 'Beta Compute', domain: 'Infrastructure', power_score: 91.3 }],
-    },
-    results: [{ id: 'c2', name: 'Beta Compute', power_score: 91.3, relevance_score: 0.88 }],
-    supporting_snippets: ['Beta Compute added 400 enterprise accounts in 2025.'],
+    retrieved_companies: [{
+      id: 'c2',
+      name: 'Beta Compute',
+      domain: 'Infrastructure',
+      subdomain: 'AI Infra',
+      relevance_score: 0.88,
+      power_score: 91.3,
+      why_selected: 'domain overlap',
+    }],
+    supporting_snippets: [{
+      company_id: 'c2',
+      company_name: 'Beta Compute',
+      source_field: 'description',
+      snippet: 'Beta Compute added 400 enterprise accounts in 2025.',
+      relevance_score: 0.88,
+    }],
+    relevance: { overall_confidence: 'high', top_relevance_score: 0.88 },
+    reasoning_summary: ['Retrieved semantic matches and generated grounded answer.'],
   });
 
   assert.equal(viewModel.answer, 'Infrastructure leaders are outpacing peers.');
-  assert.equal(viewModel.intentLabel, 'company comparison');
-  assert.equal(viewModel.keyFinding, 'Beta Compute has the strongest combined signal.');
-  assert.equal(viewModel.strongestCompanies[0].name, 'Beta Compute');
-  assert.equal(viewModel.rankedResults[0].id, 'c2');
-  assert.equal(viewModel.supportingSnippets[0], 'Beta Compute added 400 enterprise accounts in 2025.');
+  assert.equal(viewModel.retrievedCompanies[0].name, 'Beta Compute');
+  assert.equal(viewModel.supportingSnippets[0].company_id, 'c2');
+  assert.equal(viewModel.relevance.overall_confidence, 'high');
+  assert.equal(viewModel.reasoningSummary[0], 'Retrieved semantic matches and generated grounded answer.');
 });

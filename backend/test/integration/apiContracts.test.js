@@ -205,3 +205,27 @@ test('GET /investor-mode returns non-empty market/investor payload with required
   const investorScores = body.data.top_emerging_startups.map((company) => company.investor_score);
   assert.ok(new Set(investorScores).size > 1, 'investor scores should vary across startups');
 });
+
+test('GET /search returns RAG-grounded answer payload', async () => {
+  const { response, body } = await getJson('/search?q=Which companies are strongest in foundation models?');
+
+  assert.equal(response.status, 200);
+  assert.equal(typeof body.query, 'string');
+  assert.equal(typeof body.answer, 'string');
+  assert.ok(Array.isArray(body.retrieved_companies));
+  assert.ok(Array.isArray(body.supporting_snippets));
+  assert.ok(Array.isArray(body.reasoning_summary));
+  assert.ok(body.relevance);
+
+  if (body.retrieved_companies.length > 0) {
+    const company = body.retrieved_companies[0];
+    assert.ok(hasKeys(company, ['id', 'name', 'domain', 'relevance_score', 'why_selected']));
+  }
+
+  if (body.supporting_snippets.length > 0) {
+    const snippet = body.supporting_snippets[0];
+    assert.ok(hasKeys(snippet, ['company_id', 'company_name', 'source_field', 'snippet', 'relevance_score']));
+  }
+
+  assert.ok(hasKeys(body.relevance, ['overall_confidence', 'top_relevance_score', 'avg_top3_relevance_score', 'grounding_coverage']));
+});

@@ -83,9 +83,8 @@ export const buildDomainCardModels = (domains, limit = 9) =>
 
 export const buildAskAIResultViewModel = (response) => ({
   answer: response?.answer ?? null,
-  intentLabel: response?.intent ? response.intent.replaceAll('_', ' ') : null,
-  keyFinding: response?.analysis?.key_finding ?? null,
-  strongestCompanies: response?.analysis?.strongest_matching_companies ?? [],
-  rankedResults: response?.results ?? [],
+  retrievedCompanies: response?.retrieved_companies ?? [],
   supportingSnippets: response?.supporting_snippets ?? [],
+  relevance: response?.relevance ?? null,
+  reasoningSummary: response?.reasoning_summary ?? [],
 });
