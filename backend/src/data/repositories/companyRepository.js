@@ -11,6 +11,11 @@ const withOperationalMetadata = (company) => {
     updated_at: company.updated_at ?? createdAt,
     ingestion_status: company.ingestion_status ?? 'seeded',
     confidence_score: Number((company.confidence_score ?? 0.82).toFixed(2)),
+    predicted_domain: company.predicted_domain ?? company.domain ?? '',
+    predicted_subdomain: company.predicted_subdomain ?? company.subdomain ?? '',
+    classification_confidence: Number((company.classification_confidence ?? company.confidence_score ?? 0.82).toFixed(2)),
+    classification_source: company.classification_source ?? 'seed-manual',
+    classification_provider: company.classification_provider ?? 'seed-data',
     sources: company.sources ?? ['Crunchbase', 'Company Website', 'Industry Reports'],
     data_source: company.data_source ?? 'seed-data',
   };

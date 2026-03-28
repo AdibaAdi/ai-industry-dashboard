@@ -30,6 +30,11 @@
  * @property {string} updated_at
  * @property {IngestionStatus} ingestion_status
  * @property {number} confidence_score
+ * @property {string} predicted_domain
+ * @property {string} predicted_subdomain
+ * @property {number} classification_confidence
+ * @property {string} classification_source
+ * @property {string} classification_provider
  * @property {string} data_source
  */
 
