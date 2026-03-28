@@ -1,4 +1,4 @@
-const asPercentage = (part, whole) => `${((part / whole) * 100).toFixed(1)}%`;
+const roundToSingleDecimal = (value) => Number(value.toFixed(1));
 
 export const getDomainBreakdown = (companies) => {
   const total = companies.length;
@@ -25,13 +25,19 @@ export const getDomainBreakdown = (companies) => {
   }, {});
 
   return Object.values(grouped)
-    .map((domain) => ({
-      ...domain,
-      share: asPercentage(domain.total_companies, total),
-      average_growth_score: Number((domain.average_growth_score / domain.total_companies).toFixed(1)),
-      average_influence_score: Number((domain.average_influence_score / domain.total_companies).toFixed(1)),
-      average_power_score: Number((domain.average_power_score / domain.total_companies).toFixed(1)),
-      leaders: domain.leaders.sort((a, b) => b.power_score - a.power_score).slice(0, 3),
-    }))
-    .sort((a, b) => b.total_companies - a.total_companies);
+    .map((domain) => {
+      const percentage = total ? (domain.total_companies / total) * 100 : 0;
+      const roundedSharePercentage = roundToSingleDecimal(percentage);
+
+      return {
+        ...domain,
+        share_percentage: roundedSharePercentage,
+        share: `${roundedSharePercentage.toFixed(1)}%`,
+        average_growth_score: Number((domain.average_growth_score / domain.total_companies).toFixed(1)),
+        average_influence_score: Number((domain.average_influence_score / domain.total_companies).toFixed(1)),
+        average_power_score: Number((domain.average_power_score / domain.total_companies).toFixed(1)),
+        leaders: domain.leaders.sort((a, b) => b.power_score - a.power_score).slice(0, 3),
+      };
+    })
+    .sort((a, b) => b.share_percentage - a.share_percentage);
 };
