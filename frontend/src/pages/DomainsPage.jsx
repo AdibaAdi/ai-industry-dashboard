@@ -16,7 +16,7 @@ const DomainsPage = ({ compactMode, domains }) => {
             <h2 className="text-base font-semibold text-theme-primary">{domain.domain}</h2>
             <p className="mt-3 text-sm text-theme-muted">Companies tracked</p>
             <p className="text-2xl font-semibold text-cyan-400">{domain.total_companies}</p>
-            <p className="mt-2 text-sm text-emerald-400">{domain.share} share of tracked set</p>
+            <p className="mt-2 text-sm text-emerald-400">{`${domain.share_percentage.toFixed(1)}% of tracked companies`}</p>
           </article>
         ))}
       </section>
