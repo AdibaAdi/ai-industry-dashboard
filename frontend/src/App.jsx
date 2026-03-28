@@ -10,6 +10,7 @@ import InsightsPage from './pages/InsightsPage';
 import AskAIPage from './pages/AskAIPage';
 import InvestorModePage from './pages/InvestorModePage';
 import SettingsPage from './pages/SettingsPage';
+import DataDiagnosticsPage from './pages/DataDiagnosticsPage';
 import CompanyDetailDrawer from './components/CompanyDetailDrawer';
 import { useDashboardData } from './hooks/useDashboardData';
 
@@ -25,6 +26,7 @@ const App = () => {
   const [chartAnimations, setChartAnimations] = useState(() => readPref('aid-chart-animations', true));
   const [notificationsEnabled, setNotificationsEnabled] = useState(() => readPref('aid-notifications', true));
   const intelligenceData = useDashboardData();
+  const diagnosticsEnabled = import.meta.env.DEV || import.meta.env.VITE_ENABLE_DEV_DIAGNOSTICS === 'true';
   const [activeCompanyDetail, setActiveCompanyDetail] = useState(null);
 
   useEffect(() => {
@@ -109,6 +111,8 @@ const App = () => {
         );
       case 'Settings':
         return <SettingsPage settings={appSettings} compactMode={compactMode} />;
+      case 'Data Diagnostics':
+        return <DataDiagnosticsPage compactMode={compactMode} data={intelligenceData} />;
       case 'Dashboard':
       default:
         return (
@@ -131,7 +135,7 @@ const App = () => {
         onToggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
       />
       <div className="mx-auto flex w-full max-w-7xl">
-        <Sidebar activeItem={activeSection} onSelectItem={setActiveSection} />
+        <Sidebar activeItem={activeSection} onSelectItem={setActiveSection} showDiagnostics={diagnosticsEnabled} />
         <div className={`flex-1 ${compactMode ? 'compact-mode' : ''}`}>
           {intelligenceData.error ? (
             <div className="m-6 rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-sm text-red-200">

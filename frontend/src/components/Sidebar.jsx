@@ -1,6 +1,8 @@
-const navItems = ['Dashboard', 'Companies', 'Market View', 'Domains', 'Insights', 'Investor Mode', 'Ask AI', 'Settings'];
+const baseNavItems = ['Dashboard', 'Companies', 'Market View', 'Domains', 'Insights', 'Investor Mode', 'Ask AI', 'Settings'];
 
-const Sidebar = ({ activeItem, onSelectItem }) => {
+const Sidebar = ({ activeItem, onSelectItem, showDiagnostics = false }) => {
+  const navItems = showDiagnostics ? [...baseNavItems, 'Data Diagnostics'] : baseNavItems;
+
   return (
     <aside className="hidden w-64 border-r border-theme-border bg-theme-sidebar px-4 py-6 lg:block">
       <nav className="space-y-2">
