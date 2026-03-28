@@ -32,6 +32,7 @@ const printResults = (results) => {
     classification_confidence: company.classification_confidence,
     classification_source: company.classification_source,
     classification_provider: company.classification_provider,
+    model_path: company.classification_source === 'huggingface' ? 'Hugging Face API' : 'Keyword fallback',
   }));
 
   console.table(printable);
