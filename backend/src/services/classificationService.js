@@ -1,5 +1,10 @@
-const HUGGING_FACE_MODEL = process.env.HUGGING_FACE_CLASSIFICATION_MODEL ?? 'facebook/bart-large-mnli';
-const HUGGING_FACE_API_URL = `https://router.huggingface.co/hf-inference/models/${HUGGING_FACE_MODEL}`;
+import 'dotenv/config';
+
+const HUGGING_FACE_MODEL =
+  process.env.HUGGINGFACE_MODEL ??
+  process.env.HUGGING_FACE_CLASSIFICATION_MODEL ??
+  'facebook/bart-large-mnli';
+const HUGGING_FACE_API_URL = `https://api-inference.huggingface.co/models/${HUGGING_FACE_MODEL}`;
 const HUGGING_FACE_LABELS = [
   'Foundation Models',
   'AI Agents',
@@ -76,6 +81,14 @@ const FALLBACK_CLASSIFICATION = {
   provider: 'local-keywords-fallback',
 };
 
+const DEBUG_CLASSIFICATION = ['1', 'true', 'yes', 'on'].includes(String(process.env.CLASSIFICATION_DEBUG ?? '').toLowerCase());
+
+const logClassificationDebug = (...parts) => {
+  if (DEBUG_CLASSIFICATION) {
+    console.log('[classification]', ...parts);
+  }
+};
+
 const cleanText = (value) => String(value ?? '').trim();
 
 const buildClassificationText = (company) =>
@@ -122,11 +135,23 @@ const createHuggingFaceZeroShotProvider = () => ({
   async classify(inputText, domainCandidates, subdomainCandidates = null) {
     const token = process.env.HUGGINGFACE_API_KEY;
 
+    logClassificationDebug(
+      'Hugging Face config:',
+      `api_key_loaded=${Boolean(token)}`,
+      `model=${HUGGING_FACE_MODEL}`,
+      `endpoint=${HUGGING_FACE_API_URL}`,
+    );
+
     if (!token || !inputText) {
-      return null;
+      return {
+        result: null,
+        reason: !token ? 'HUGGINGFACE_API_KEY is missing.' : 'Classification input text is empty.',
+      };
     }
 
     const classifyLabels = async (candidateLabels) => {
+      logClassificationDebug('Attempting Hugging Face request with labels:', candidateLabels.join(', '));
+
       const response = await fetch(HUGGING_FACE_API_URL, {
         method: 'POST',
         headers: {
@@ -143,7 +168,8 @@ const createHuggingFaceZeroShotProvider = () => ({
       });
 
       if (!response.ok) {
-        return null;
+        const errorText = await response.text();
+        throw new Error(`Hugging Face request failed (${response.status} ${response.statusText}): ${errorText}`);
       }
 
       const payload = await response.json();
@@ -151,7 +177,7 @@ const createHuggingFaceZeroShotProvider = () => ({
       const confidence = payload?.scores?.[0];
 
       if (!label || typeof confidence !== 'number') {
-        return null;
+        throw new Error(`Unexpected Hugging Face response payload: ${JSON.stringify(payload)}`);
       }
 
       return { label, confidence };
@@ -159,22 +185,27 @@ const createHuggingFaceZeroShotProvider = () => ({
 
     try {
       const domainResult = await classifyLabels(domainCandidates);
-      if (!domainResult) {
-        return null;
-      }
-
       const candidateSubdomains = subdomainCandidates ?? DOMAIN_TAXONOMY[domainResult.label]?.subdomains ?? [];
       const subdomainResult = candidateSubdomains.length ? await classifyLabels(candidateSubdomains) : null;
 
-      return {
+      const result = {
         source: 'huggingface',
         provider: 'huggingface',
         confidence: Number((subdomainResult ? (domainResult.confidence + subdomainResult.confidence) / 2 : domainResult.confidence).toFixed(4)),
         predicted_domain: domainResult.label,
         predicted_subdomain: subdomainResult?.label ?? candidateSubdomains[0] ?? FALLBACK_CLASSIFICATION.subdomain,
       };
-    } catch {
-      return null;
+
+      logClassificationDebug('Hugging Face classification succeeded:', JSON.stringify(result));
+
+      return { result, reason: null };
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : String(error);
+      logClassificationDebug('Hugging Face classification failed:', reason);
+      return {
+        result: null,
+        reason,
+      };
     }
   },
 });
@@ -183,14 +214,26 @@ const classificationProviders = [createHuggingFaceZeroShotProvider()];
 
 const runProviderChain = async (inputText) => {
   for (const provider of classificationProviders) {
-    const result = await provider.classify(inputText, HUGGING_FACE_LABELS);
+    const { result, reason } = await provider.classify(inputText, HUGGING_FACE_LABELS);
 
     if (result?.predicted_domain) {
-      return result;
+      return {
+        ...result,
+        fallback_reason: null,
+      };
     }
+
+    logClassificationDebug(`Provider "${provider.name}" returned no result. Falling back.`, reason ?? 'No reason provided.');
+    return {
+      ...inferWithKeywords(inputText),
+      fallback_reason: reason ?? 'Unknown classification provider failure.',
+    };
   }
 
-  return inferWithKeywords(inputText);
+  return {
+    ...inferWithKeywords(inputText),
+    fallback_reason: 'No classification providers were configured.',
+  };
 };
 
 const chooseSubdomain = (domain, inputText, existingSubdomain, predictedSubdomain) => {
@@ -264,6 +307,7 @@ export const classifyCompanyRecord = async (company) => {
     classification_confidence: classificationConfidence,
     classification_source: resolved.source,
     classification_provider: predicted.provider,
+    classification_fallback_reason: predicted.fallback_reason ?? null,
     tags,
     confidence_score: Number((company.confidence_score ? Math.max(company.confidence_score, classificationConfidence) : classificationConfidence).toFixed(2)),
     ingestion_status: 'classified',

@@ -1,6 +1,10 @@
 import 'dotenv/config';
 import { classifyCompanyRecords } from '../services/classificationService.js';
 
+process.env.CLASSIFICATION_DEBUG ??= '1';
+
+const hfModel = process.env.HUGGINGFACE_MODEL ?? process.env.HUGGING_FACE_CLASSIFICATION_MODEL ?? 'facebook/bart-large-mnli';
+
 const sampleCompanies = [
   {
     id: 'sample-agent-ops',
@@ -23,6 +27,12 @@ const sampleCompanies = [
 ];
 
 const printResults = (results) => {
+  console.log(
+    '[classify:samples] Env check:',
+    `HUGGINGFACE_API_KEY loaded=${Boolean(process.env.HUGGINGFACE_API_KEY)}`,
+    `HUGGINGFACE_MODEL=${hfModel}`,
+  );
+
   const printable = results.map((company) => ({
     id: company.id,
     name: company.name,
@@ -33,7 +43,8 @@ const printResults = (results) => {
     classification_confidence: company.classification_confidence,
     classification_source: company.classification_source,
     classification_provider: company.classification_provider,
-    model_path: company.classification_source === 'huggingface' ? 'Hugging Face API' : 'Keyword fallback',
+    fallback_reason: company.classification_fallback_reason ?? 'none',
+    model_path: company.classification_source === 'huggingface' ? `Hugging Face API (${hfModel})` : 'Keyword fallback',
   }));
 
   console.table(printable);
