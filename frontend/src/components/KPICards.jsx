@@ -2,6 +2,12 @@ const KPICards = ({ kpis, loading }) => {
   const coverageYear = kpis.freshness?.current_year_coverage?.year;
   const coverageRecords = kpis.freshness?.current_year_coverage?.covered_records ?? 0;
   const coveragePct = kpis.freshness?.current_year_coverage?.coverage_pct ?? 0;
+  const topScoreValue = typeof kpis.topScore === 'number' ? Number(kpis.topScore).toFixed(1) : '—';
+  const refreshSummary = `${kpis.freshness?.newly_added_companies ?? 0} new · ${kpis.freshness?.updated_records_count ?? 0} updated`;
+  const coverageSummary =
+    coverageYear && kpis.totalCompanies > 0
+      ? `${coverageYear} coverage ${coverageRecords}/${kpis.totalCompanies} (${coveragePct}%)`
+      : 'Coverage details unavailable';
 
   const cards = [
     {
@@ -12,22 +18,20 @@ const KPICards = ({ kpis, loading }) => {
     },
     {
       label: 'Top Domain',
-      value: loading ? '…' : kpis.topDomain,
+      value: loading ? '…' : kpis.topDomain ?? '—',
       trend: 'By active company count',
       trendClassName: 'text-emerald-400',
     },
     {
       label: 'Top Score',
-      value: loading ? '…' : Number(kpis.topScore).toFixed(1),
-      trend: loading ? '...' : kpis.topCompany,
+      value: loading ? '…' : topScoreValue,
+      trend: loading ? '...' : kpis.topCompany ?? '—',
       trendClassName: 'text-emerald-400',
     },
     {
       label: 'Refresh Status',
-      value: loading ? '…' : `${kpis.freshness?.newly_added_companies ?? 0} new · ${kpis.freshness?.updated_records_count ?? 0} updated`,
-      trend: loading
-        ? '...'
-        : `${coverageYear ?? new Date().getFullYear()} coverage ${coverageRecords}/${kpis.totalCompanies} (${coveragePct}%)`,
+      value: loading ? '…' : refreshSummary,
+      trend: loading ? '...' : coverageSummary,
       trendClassName: 'text-theme-secondary',
     },
   ];

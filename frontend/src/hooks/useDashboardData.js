@@ -72,9 +72,9 @@ export const useDashboardData = () => {
       growthTrendData: toGrowthTrendData(state.companies),
       kpis: {
         totalCompanies: state.companies.length,
-        topDomain: state.domains[0]?.domain ?? 'N/A',
-        topScore: state.companies[0]?.power_score ?? 0,
-        topCompany: state.companies[0]?.name ?? 'N/A',
+        topDomain: state.domains[0]?.domain ?? null,
+        topScore: state.companies[0]?.power_score ?? null,
+        topCompany: state.companies[0]?.name ?? null,
         freshness: state.companiesMeta?.refresh ?? null,
       },
     }),

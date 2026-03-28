@@ -52,7 +52,7 @@ const InsightsPage = ({ compactMode, insights, onOpenCompany }) => {
                     insight.confidence?.strength,
                   )}`}
                 >
-                  {insight.confidence?.level ?? 'Signal'}
+                  {insight.confidence?.level ?? 'Unspecified'}
                 </span>
               </div>
               <p className="mt-2 text-sm text-theme-muted">{insight.short_summary}</p>
@@ -81,7 +81,7 @@ const InsightsPage = ({ compactMode, insights, onOpenCompany }) => {
                   activeInsight.confidence?.strength,
                 )}`}
               >
-                {activeInsight.confidence?.level ?? 'Signal'}
+                {activeInsight.confidence?.level ?? 'Unspecified'}
               </span>
             </div>
 
