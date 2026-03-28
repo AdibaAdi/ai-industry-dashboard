@@ -16,7 +16,7 @@ const resolveApiBaseUrl = () => {
   return '';
 };
 
-const API_BASE_URL = resolveApiBaseUrl();
+export const API_BASE_URL = resolveApiBaseUrl();
 
 const buildApiUrl = (path, queryParams) => {
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
@@ -82,5 +82,13 @@ export const apiClient = {
   async getCompanyInsight(companyId) {
     const payload = await requestJson(`/companies/${companyId}/insight`);
     return payload.data;
+  },
+
+  async getHealth() {
+    return requestJson('/health');
+  },
+
+  async getDevValidationReport() {
+    return requestJson('/dev/validation/report');
   },
 };
