@@ -25,7 +25,7 @@ const scoreMetadataMatch = (company, options = {}) => {
   return score;
 };
 
-export const retrieveHybridCompanySignals = ({
+export const retrieveHybridCompanySignals = async ({
   companies,
   query,
   metadataFilter,
@@ -42,8 +42,8 @@ export const retrieveHybridCompanySignals = ({
   let usedSemantic = false;
 
   try {
-    ensureCompanyVectorIndex(companies);
-    const semanticMatches = searchCompanyVectors(normalizedQuery, {
+    await ensureCompanyVectorIndex(companies);
+    const semanticMatches = await searchCompanyVectors(normalizedQuery, {
       limit: semanticOptions.limit ?? 20,
       minSimilarity: semanticOptions.minSimilarity ?? 0.08,
       metadataFilter,
