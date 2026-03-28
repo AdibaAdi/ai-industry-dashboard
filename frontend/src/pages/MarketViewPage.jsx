@@ -1,6 +1,6 @@
 import SectionHeading from '../components/SectionHeading';
 import { Line, LineChart, ResponsiveContainer } from 'recharts';
-import { getMarketFeedMeta, getPublicMarketCompanies } from '../data/marketSignals';
+import { getMarketFeedMeta, getPrivateMarketCompanies, getPublicMarketCompanies } from '../data/marketSignals';
 
 const currency = new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -10,6 +10,13 @@ const currency = new Intl.NumberFormat('en-US', {
 });
 
 const marketCapFormatter = new Intl.NumberFormat('en-US', {
+  maximumFractionDigits: 1,
+});
+
+const compactCurrency = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  notation: 'compact',
   maximumFractionDigits: 1,
 });
 
@@ -42,6 +49,7 @@ const PriceTrendSparkline = ({ data }) => {
 
 const MarketViewPage = ({ compactMode, companies, onOpenCompany }) => {
   const publicCompanies = getPublicMarketCompanies(companies);
+  const privateCompanies = getPrivateMarketCompanies(companies);
   const marketFeedMeta = getMarketFeedMeta();
 
   return (
@@ -58,6 +66,10 @@ const MarketViewPage = ({ compactMode, companies, onOpenCompany }) => {
       </section>
 
       <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
+        <SectionHeading
+          title="Public Market Leaders"
+          subtitle="Public AI companies with active tickers and market signal coverage."
+        />
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-theme-muted">
             Showing <span className="font-semibold text-theme-primary">{publicCompanies.length}</span> public companies.
@@ -97,6 +109,53 @@ const MarketViewPage = ({ compactMode, companies, onOpenCompany }) => {
                       ? `$${marketCapFormatter.format(company.marketSignal.marketCapBillions)}B`
                       : 'N/A'}
                   </td>
+                  <td className="py-3">{company.domain}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
+        <SectionHeading
+          title="Private AI Companies"
+          subtitle="Private AI companies without public-market tickers."
+        />
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-theme-muted">
+            Showing <span className="font-semibold text-theme-primary">{privateCompanies.length}</span> private companies.
+          </p>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm">
+            <thead>
+              <tr className="border-b border-theme-border text-left text-theme-muted">
+                <th className="pb-3 font-medium">Company</th>
+                <th className="pb-3 font-medium">Valuation</th>
+                <th className="pb-3 font-medium">Funding</th>
+                <th className="pb-3 font-medium">Growth Score</th>
+                <th className="pb-3 font-medium">Last Updated</th>
+                <th className="pb-3 font-medium">AI Domain</th>
+              </tr>
+            </thead>
+            <tbody>
+              {privateCompanies.map((company) => (
+                <tr
+                  key={company.id}
+                  className="cursor-pointer border-b border-theme-border text-theme-secondary transition hover:bg-theme-surface/50 last:border-b-0"
+                  onClick={() => onOpenCompany?.(company.id, 'Market View')}
+                >
+                  <td className="py-3 font-medium text-theme-primary">{company.name}</td>
+                  <td className="py-3 text-theme-primary">
+                    {typeof company.valuation === 'number' ? compactCurrency.format(company.valuation * 1_000_000) : 'N/A'}
+                  </td>
+                  <td className="py-3 text-theme-primary">
+                    {typeof company.funding === 'number' ? compactCurrency.format(company.funding * 1_000_000) : 'N/A'}
+                  </td>
+                  <td className="py-3 text-theme-primary">{typeof company.growth_score === 'number' ? company.growth_score.toFixed(1) : 'N/A'}</td>
+                  <td className="py-3">{company.last_updated ?? 'N/A'}</td>
                   <td className="py-3">{company.domain}</td>
                 </tr>
               ))}
