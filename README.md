@@ -23,7 +23,7 @@ backend/
       vector/vectorStoreService.js
       jobs/schedulerService.js
     utils/
-      http.js                        # HTTP response + URL helpers
+      http.js                        # HTTP response + URL helpers + CORS headers
       companyQueryUtils.js           # Query parsing/filter/sort utilities
     types/companyTypes.js            # Shared JSDoc schemas
     app.js                           # HTTP app composition
@@ -79,8 +79,13 @@ Each company record includes:
 
 ```bash
 cd backend
+cp .env.example .env
 npm run start
 ```
+
+Backend defaults:
+- `PORT=4000` when unset.
+- `CORS_ALLOWED_ORIGINS=http://localhost:5173` from `.env` for local frontend access.
 
 ### 2) Configure frontend API URL
 
@@ -108,6 +113,46 @@ Notes:
 cd frontend
 npm run dev
 ```
+
+## Deployment
+
+### Deploy backend to Render
+
+1. Create a **Web Service** in Render targeting the `backend` directory.
+2. Configure:
+   - Build command: `npm install`
+   - Start command: `npm run start`
+3. Add environment variables in Render:
+   - `PORT` = `10000` (or leave unset; Render also injects `PORT` automatically)
+   - `CORS_ALLOWED_ORIGINS` = your Netlify site URL(s), comma-separated if multiple
+     - Example: `https://your-app.netlify.app,https://www.yourdomain.com`
+   - Any optional secrets like `HUGGINGFACE_API_KEY` directly in Render (never commit these).
+4. Deploy and copy your Render service URL, e.g. `https://your-api.onrender.com`.
+
+### Deploy frontend to Netlify
+
+This repo includes a root `netlify.toml` that sets `frontend` as the build base.
+
+1. In Netlify, import the repository.
+2. Confirm build settings (auto-read from `netlify.toml`):
+   - Base directory: `frontend`
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+3. Add environment variable in Netlify:
+   - `VITE_API_BASE_URL` = your Render backend URL (e.g. `https://your-api.onrender.com`)
+4. Trigger deploy.
+
+### Post-deploy check
+
+- Open the Netlify site.
+- Confirm dashboard data loads from the Render API.
+- If API calls fail with CORS, verify `CORS_ALLOWED_ORIGINS` exactly matches the frontend origin.
+
+## Security / secrets
+
+- Do not commit real `.env` files.
+- Commit only `.env.example` templates.
+- Configure secrets (`HUGGINGFACE_API_KEY`, etc.) only in Render/Netlify environment settings.
 
 ## Extension roadmap (already scaffolded by architecture)
 
