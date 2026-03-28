@@ -4,7 +4,26 @@ const HUGGING_FACE_MODEL =
   process.env.HUGGINGFACE_MODEL ??
   process.env.HUGGING_FACE_CLASSIFICATION_MODEL ??
   'facebook/bart-large-mnli';
-const HUGGING_FACE_API_URL = `https://api-inference.huggingface.co/models/${HUGGING_FACE_MODEL}`;
+const HUGGING_FACE_ROUTER_BASE_URL = process.env.HUGGINGFACE_ROUTER_BASE_URL ?? 'https://router.huggingface.co';
+const HUGGING_FACE_ROUTER_PROVIDER_PATH = process.env.HUGGINGFACE_ROUTER_PROVIDER_PATH ?? '/hf-inference/models';
+
+const normalizeText = (value) => String(value ?? '').trim();
+const trimTrailingSlashes = (value) => normalizeText(value).replace(/\/+$/, '');
+const trimLeadingSlashes = (value) => normalizeText(value).replace(/^\/+/, '');
+
+const buildHuggingFaceEndpoint = ({ baseUrl, providerPath, model }) => {
+  const normalizedBaseUrl = trimTrailingSlashes(baseUrl);
+  const normalizedProviderPath = trimLeadingSlashes(trimTrailingSlashes(providerPath));
+  const normalizedModel = trimLeadingSlashes(model);
+
+  return `${normalizedBaseUrl}/${normalizedProviderPath}/${normalizedModel}`;
+};
+
+const HUGGING_FACE_API_URL = buildHuggingFaceEndpoint({
+  baseUrl: HUGGING_FACE_ROUTER_BASE_URL,
+  providerPath: HUGGING_FACE_ROUTER_PROVIDER_PATH,
+  model: HUGGING_FACE_MODEL,
+});
 const HUGGING_FACE_LABELS = [
   'Foundation Models',
   'AI Agents',
