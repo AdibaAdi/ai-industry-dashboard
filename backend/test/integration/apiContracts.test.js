@@ -146,7 +146,9 @@ test('GET /domains returns non-empty dynamically computed counts and percentages
   const uniqueCounts = new Set(domainsBody.data.map((domain) => domain.total_companies));
   assert.ok(uniqueCounts.size > 1, 'domain totals should not be suspiciously uniform');
 
-  assert.equal(domainsBody.meta.total, domainsBody.data.length);
+  assert.equal(domainsBody.meta.total_domains, domainsBody.data.length);
+  assert.equal(domainsBody.meta.total_companies, totalCompanies);
+  assert.ok(Array.isArray(domainsBody.warnings));
 });
 
 test('GET /insights returns generated insights with confidence and structured metrics', async () => {

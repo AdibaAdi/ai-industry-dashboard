@@ -278,7 +278,10 @@ const buildConfidenceLabelCheck = (summary, dominanceThreshold, totalCompanies) 
 
 const buildDomainDistributionCheck = (companies, dominanceThreshold) => {
   const distribution = companies.reduce((acc, company) => {
-    const domain = typeof company.domain === 'string' && company.domain.trim() ? company.domain.trim() : 'Unknown';
+    const classifiedDomain = typeof company.predicted_domain === 'string' && company.predicted_domain.trim()
+      ? company.predicted_domain.trim()
+      : '';
+    const domain = classifiedDomain || (typeof company.domain === 'string' && company.domain.trim() ? company.domain.trim() : 'Unknown');
     acc[domain] = (acc[domain] ?? 0) + 1;
     return acc;
   }, {});
@@ -288,14 +291,30 @@ const buildDomainDistributionCheck = (companies, dominanceThreshold) => {
     .sort((a, b) => b.count - a.count);
 
   const leader = rankedDomains[0] ?? { domain: 'Unknown', count: 0, ratio: 0 };
+  const counts = rankedDomains.map((domain) => domain.count);
+  const maxCount = counts.length ? Math.max(...counts) : 0;
+  const minCount = counts.length ? Math.min(...counts) : 0;
+  const meanCount = counts.length ? counts.reduce((sum, count) => sum + count, 0) / counts.length : 0;
+  const variance = counts.length
+    ? counts.reduce((sum, count) => sum + (count - meanCount) ** 2, 0) / counts.length
+    : 0;
+  const coefficientOfVariation = meanCount > 0 ? Math.sqrt(variance) / meanCount : 0;
+  const spreadRatio = maxCount > 0 ? (maxCount - minCount) / maxCount : 0;
 
-  if (leader.ratio >= dominanceThreshold && companies.length > 0) {
+  const dominanceWarning = leader.ratio >= dominanceThreshold && companies.length > 0;
+  const uniformityWarning = rankedDomains.length >= 3 && (spreadRatio <= 0.12 || coefficientOfVariation <= 0.1);
+
+  if (dominanceWarning || uniformityWarning) {
     return {
       name: 'Domain distribution realism',
       status: STATUS.WARN,
-      message: `Domain distribution appears uniform around "${leader.domain}" (${(leader.ratio * 100).toFixed(1)}% of companies).`,
+      message: dominanceWarning
+        ? `Domain distribution is heavily concentrated in "${leader.domain}" (${(leader.ratio * 100).toFixed(1)}% of companies).`
+        : 'Domain distribution appears unnaturally uniform across domains.',
       details: {
         top_domain: leader,
+        spread_ratio: Number(spreadRatio.toFixed(3)),
+        coefficient_of_variation: Number(coefficientOfVariation.toFixed(3)),
         domain_counts: rankedDomains,
       },
     };
@@ -307,6 +326,8 @@ const buildDomainDistributionCheck = (companies, dominanceThreshold) => {
     message: 'Domain distribution appears varied.',
     details: {
       top_domain: leader,
+      spread_ratio: Number(spreadRatio.toFixed(3)),
+      coefficient_of_variation: Number(coefficientOfVariation.toFixed(3)),
       domain_counts: rankedDomains,
     },
   };
