@@ -1,5 +1,14 @@
 const HUGGING_FACE_MODEL = process.env.HUGGING_FACE_CLASSIFICATION_MODEL ?? 'facebook/bart-large-mnli';
 const HUGGING_FACE_API_URL = `https://router.huggingface.co/hf-inference/models/${HUGGING_FACE_MODEL}`;
+const HUGGING_FACE_LABELS = [
+  'Foundation Models',
+  'AI Agents',
+  'Infrastructure',
+  'Developer Tools',
+  'Healthcare AI',
+  'Robotics',
+  'Defense AI',
+];
 
 const DOMAIN_TAXONOMY = {
   'Foundation Models': {
@@ -64,7 +73,7 @@ const FALLBACK_CLASSIFICATION = {
   subdomain: 'GenAI Applications',
   confidence: 0.6,
   source: 'keyword-fallback',
-  provider: 'local-keywords',
+  provider: 'local-keywords-fallback',
 };
 
 const cleanText = (value) => String(value ?? '').trim();
@@ -101,7 +110,7 @@ const inferWithKeywords = (inputText) => {
 
   return {
     source: 'keyword-fallback',
-    provider: 'local-keywords',
+    provider: 'local-keywords-fallback',
     confidence,
     predicted_domain: best.domain,
     predicted_subdomain: subdomains[0],
@@ -109,9 +118,9 @@ const inferWithKeywords = (inputText) => {
 };
 
 const createHuggingFaceZeroShotProvider = () => ({
-  name: 'hugging-face-zero-shot',
+  name: 'huggingface-zero-shot',
   async classify(inputText, domainCandidates, subdomainCandidates = null) {
-    const token = process.env.HUGGING_FACE_API_TOKEN;
+    const token = process.env.HUGGINGFACE_API_KEY;
 
     if (!token || !inputText) {
       return null;
@@ -158,8 +167,8 @@ const createHuggingFaceZeroShotProvider = () => ({
       const subdomainResult = candidateSubdomains.length ? await classifyLabels(candidateSubdomains) : null;
 
       return {
-        source: 'ml-hugging-face',
-        provider: HUGGING_FACE_MODEL,
+        source: 'huggingface',
+        provider: 'huggingface',
         confidence: Number((subdomainResult ? (domainResult.confidence + subdomainResult.confidence) / 2 : domainResult.confidence).toFixed(4)),
         predicted_domain: domainResult.label,
         predicted_subdomain: subdomainResult?.label ?? candidateSubdomains[0] ?? FALLBACK_CLASSIFICATION.subdomain,
@@ -174,7 +183,7 @@ const classificationProviders = [createHuggingFaceZeroShotProvider()];
 
 const runProviderChain = async (inputText) => {
   for (const provider of classificationProviders) {
-    const result = await provider.classify(inputText, domainLabels);
+    const result = await provider.classify(inputText, HUGGING_FACE_LABELS);
 
     if (result?.predicted_domain) {
       return result;
@@ -224,7 +233,7 @@ const assignTags = (company, domain, subdomain, text) => {
 const preserveExistingClassification = (company, predicted) => {
   const hasExistingDomain = cleanText(company.domain) && DOMAIN_TAXONOMY[cleanText(company.domain)];
 
-  if (hasExistingDomain && predicted.source !== 'ml-hugging-face') {
+  if (hasExistingDomain && predicted.source !== 'huggingface') {
     return {
       domain: cleanText(company.domain),
       subdomain: chooseSubdomain(cleanText(company.domain), buildClassificationText(company), cleanText(company.subdomain), predicted.predicted_subdomain),
