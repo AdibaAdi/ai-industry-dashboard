@@ -78,6 +78,20 @@ test('GET /companies returns non-empty structured data with dynamic score distri
   const uniquePowerScores = new Set(body.data.map((company) => company.power_score));
   assert.ok(uniquePowerScores.size > 1, 'power_score values should vary across companies');
 
+  const uniqueGrowthScores = new Set(body.data.map((company) => company.growth_score));
+  const uniqueInfluenceScores = new Set(body.data.map((company) => company.influence_score));
+  assert.ok(uniqueGrowthScores.size > 1, 'growth_score values should vary across companies');
+  assert.ok(uniqueInfluenceScores.size > 1, 'influence_score values should vary across companies');
+
+  const confidenceCounts = body.data.reduce((acc, company) => {
+    const score = company.confidence_score;
+    const label = score >= 0.8 ? 'High' : score >= 0.5 ? 'Medium' : score >= 0 ? 'Low' : 'Unknown';
+    acc[label] = (acc[label] ?? 0) + 1;
+    return acc;
+  }, {});
+  const observedConfidenceLabels = Object.values(confidenceCounts).filter((count) => count > 0).length;
+  assert.ok(observedConfidenceLabels >= 2, 'confidence labels should not collapse to one class');
+
   const uniqueDomains = new Set(body.data.map((company) => company.domain));
   assert.ok(uniqueDomains.size > 1, 'companies should span multiple domains');
 
