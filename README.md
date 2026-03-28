@@ -1,165 +1,258 @@
 # AI Industry Intelligence Dashboard
 
-A production-minded AI company intelligence dashboard with a serverless-ready API layer, modular data services, and a frontend fully wired to backend data endpoints.
+A deployed, full-stack intelligence platform for exploring the AI company landscape through curated analytics, search, and machine-assisted classification. The app combines a production frontend, backend API, and data enrichment services into a single dashboard experience designed for real-world use. It includes live analytics views, backend-driven aggregation, data quality indicators, and Hugging Face powered zero-shot classification for domain tagging and confidence scoring. This project is built to demonstrate practical product thinking, software architecture discipline, and deployable AI-enabled workflows.
 
-## Architecture
+---
 
-```text
-backend/
-  src/
-    api/
-      controllers/                   # Request handlers (companies/domains/insights/health)
-      routes/                        # Route matching table
-    data/
-      companies.js                   # Canonical seed dataset (40+ companies)
-      repositories/companyRepository.js
-      connectors/databaseClient.js   # DB adapter scaffold
-    services/
-      companyService.js              # Query/filter/sort orchestration
-      domainService.js
-      insightsService.js
-      scoringService.js
-      pipeline/classificationService.js
-      vector/vectorStoreService.js
-      jobs/schedulerService.js
-    utils/
-      http.js                        # HTTP response + URL helpers + CORS headers
-      companyQueryUtils.js           # Query parsing/filter/sort utilities
-    types/companyTypes.js            # Shared JSDoc schemas
-    app.js                           # HTTP app composition
-    server.js                        # Runtime bootstrap
+## Live Demo
 
-frontend/
-  src/api/client.js                  # API client layer
-  src/hooks/useDashboardData.js      # Data orchestration + loading/error handling
-  src/utils/transformers.js          # API-to-UI transformation layer
-  src/pages + src/components + charts # Presentation/UI
+**Frontend (Netlify):** https://ai-industry-dashboard.netlify.app/  
+**Backend (Render):** Deployed API service consumed by the frontend
+
+> The frontend is hosted on Netlify and configured to call a Render-hosted backend API.
+
+---
+
+## Why this project matters
+
+Most AI market dashboards are static snapshots. This project is different: it is a working application with a live UI, a backend service layer, ingestion and enrichment flows, and model-assisted classification.
+
+It helps users quickly explore:
+- AI companies and their positioning
+- Domain and subdomain concentration
+- Investor-oriented signals and ranking views
+- Emerging trends across segments
+
+In plain terms, this is not just charts over a JSON file. It is a deployed product that connects user-facing exploration with backend analytics, automated intelligence enrichment, and production-style infrastructure.
+
+---
+
+## Key Features
+
+- **Dashboard overview** with KPIs, trend visuals, and summary intelligence cards
+- **Companies explorer** with filtering, ranking context, and detailed company drill-down
+- **Domain analysis** for market segmentation and distribution insights
+- **Investor Mode** focused on scoring and decision-support style comparisons
+- **Market View** for landscape-level pattern analysis
+- **Ask AI** interface for retrieval-style company intelligence queries
+- **Confidence and source metadata** surfaced alongside enriched records
+- **Data freshness indicators** to communicate recency and trust context
+- **Hugging Face ML classification** for domain and subdomain prediction
+- **API-driven frontend** that consumes live backend endpoints
+
+---
+
+## Tech Stack
+
+### Frontend
+- React 18
+- Vite
+- Recharts
+- Tailwind CSS
+
+### Backend
+- Node.js (ES Modules)
+- Lightweight HTTP server and route/controller architecture
+- Service layer for domains, insights, investor mode, search, and ingestion
+
+### ML / NLP
+- Hugging Face Inference API
+- Zero-shot classification (`facebook/bart-large-mnli` by default)
+- Confidence scoring and fallback taxonomy/keyword logic
+
+### Deployment
+- Netlify (frontend)
+- Render (backend API)
+
+### Testing / Validation
+- Node test runner for frontend and backend tests
+- API contract integration tests
+- Data integrity validation scripts
+
+---
+
+## Architecture Overview
+
+High-level flow:
+
+1. **React + Vite frontend** renders dashboards, explorer views, and AI query UX.
+2. **Node backend API** exposes structured endpoints for companies, domains, insights, investor mode, search, and health.
+3. **Data services and transformation layer** normalize, enrich, score, and aggregate records for UI consumption.
+4. **Hugging Face classification service** predicts domain/subdomain labels and attaches confidence metadata.
+5. **Deployment split** keeps presentation and API concerns clean: Netlify for frontend, Render for backend.
+
+This architecture keeps the UI responsive while centralizing business logic and enrichment in backend services.
+
+---
+
+## ML / Intelligence Layer
+
+The intelligence layer is intentionally practical and transparent.
+
+- The backend builds classification text from company name, description, and tags.
+- A **Hugging Face zero-shot classifier** predicts the most likely domain and subdomain.
+- The system records **confidence scores** to indicate signal strength.
+- If external model inference is unavailable, the service uses deterministic fallback logic based on a maintained domain taxonomy and keyword scoring.
+- Classification output is fed into enrichment and analytics pipelines so downstream views remain consistent.
+
+This design provides useful automation without overclaiming model capabilities.
+
+---
+
+## Screenshots
+
+_Add screenshots here as the UI evolves._
+
+### Dashboard Overview
+![Dashboard Overview](./docs/screenshots/dashboard-overview.png)
+
+### Investor Mode
+![Investor Mode](./docs/screenshots/investor-mode.png)
+
+### Market View
+![Market View](./docs/screenshots/market-view.png)
+
+### Ask AI
+![Ask AI](./docs/screenshots/ask-ai.png)
+
+### Domains View
+![Domains View](./docs/screenshots/domains-view.png)
+
+---
+
+## Local Development
+
+### 1) Clone and install dependencies
+
+```bash
+git clone <your-repo-url>
+cd ai-industry-dashboard
+
+cd backend && npm install
+cd ../frontend && npm install
 ```
 
-## API Endpoints
+### 2) Configure environment variables
 
-- `GET /companies`
-- `GET /companies/:id`
-- `GET /domains`
-- `GET /insights`
-- `GET /health`
+Create local env files:
 
-### Query support on `/companies`
+```bash
+# from repo root
+cat > backend/.env <<'ENV'
+PORT=4000
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+HUGGINGFACE_API_KEY=your_hf_token_here
+HUGGINGFACE_MODEL=facebook/bart-large-mnli
+HUGGINGFACE_ROUTER_BASE_URL=https://router.huggingface.co
+HUGGINGFACE_ROUTER_PROVIDER_PATH=/hf-inference/models
+CLASSIFICATION_DEBUG=false
+ENV
 
-- `domain`
-- `search`
-- `sortBy` (default `power_score`)
-- `order` (`asc` / `desc`)
+cat > frontend/.env <<'ENV'
+VITE_API_BASE_URL=http://localhost:4000
+VITE_ENABLE_DEV_DIAGNOSTICS=true
+ENV
+```
 
-## Data model
-
-Each company record includes:
-
-- `id`
-- `name`
-- `description`
-- `website`
-- `domain`
-- `subdomain`
-- `founded_year`
-- `headquarters`
-- `funding`
-- `valuation`
-- `company_type`
-- `growth_score`
-- `influence_score`
-- `power_score`
-- `source_urls`
-- `tags`
-- `last_updated`
-
-## Local development
-
-### 1) Start backend API
+### 3) Run backend
 
 ```bash
 cd backend
-cp .env.example .env
-npm run start
+npm run dev
 ```
 
-Backend defaults:
-- `PORT=4000` when unset.
-- `CORS_ALLOWED_ORIGINS=http://localhost:5173` from `.env` for local frontend access.
-
-### 2) Configure frontend API URL
-
-Create a frontend env file from the example:
-
-```bash
-cd frontend
-cp .env.example .env
-```
-
-Set the API base URL in `frontend/.env`:
-
-```bash
-VITE_API_BASE_URL=http://localhost:4000
-```
-
-Notes:
-- The frontend API client reads `import.meta.env.VITE_API_BASE_URL` for all API requests.
-- In local development (`npm run dev`), the client falls back to `http://localhost:4000` only when `VITE_API_BASE_URL` is not set.
-- In non-dev builds, no localhost fallback is used, so deployments should always set `VITE_API_BASE_URL`.
-
-### 3) Start frontend
+### 4) Run frontend
 
 ```bash
 cd frontend
 npm run dev
 ```
 
+The frontend runs on Vite (default `http://localhost:5173`) and calls the backend API at `http://localhost:4000`.
+
+---
+
+## Environment Variables
+
+Use these as templates only. Do not commit real secrets.
+
+### `backend/.env` example
+
+```env
+PORT=4000
+CORS_ALLOWED_ORIGINS=http://localhost:5173
+HUGGINGFACE_API_KEY=your_huggingface_token
+HUGGINGFACE_MODEL=facebook/bart-large-mnli
+HUGGINGFACE_ROUTER_BASE_URL=https://router.huggingface.co
+HUGGINGFACE_ROUTER_PROVIDER_PATH=/hf-inference/models
+CLASSIFICATION_DEBUG=false
+```
+
+### `frontend/.env` example
+
+```env
+VITE_API_BASE_URL=http://localhost:4000
+VITE_ENABLE_DEV_DIAGNOSTICS=true
+```
+
+---
+
 ## Deployment
 
-### Deploy backend to Render
+### Frontend on Netlify
+- Set base directory to `frontend`
+- Build command: `npm run build`
+- Publish directory: `dist`
+- Set `VITE_API_BASE_URL` to your Render backend URL
 
-1. Create a **Web Service** in Render targeting the `backend` directory.
-2. Configure:
-   - Build command: `npm install`
-   - Start command: `npm run start`
-3. Add environment variables in Render:
-   - `PORT` = `10000` (or leave unset; Render also injects `PORT` automatically)
-   - `CORS_ALLOWED_ORIGINS` = your Netlify site URL(s), comma-separated if multiple
-     - Example: `https://your-app.netlify.app,https://www.yourdomain.com`
-   - Any optional secrets like `HUGGINGFACE_API_KEY` directly in Render (never commit these).
-4. Deploy and copy your Render service URL, e.g. `https://your-api.onrender.com`.
+### Backend on Render
+- Deploy the `backend` service
+- Start command: `npm run start`
+- Set `CORS_ALLOWED_ORIGINS` to your Netlify domain
+- Configure Hugging Face and any additional service keys in Render environment settings
 
-### Deploy frontend to Netlify
+---
 
-This repo includes a root `netlify.toml` that sets `frontend` as the build base.
+## Project Structure
 
-1. In Netlify, import the repository.
-2. Confirm build settings (auto-read from `netlify.toml`):
-   - Base directory: `frontend`
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-3. Add environment variable in Netlify:
-   - `VITE_API_BASE_URL` = your Render backend URL (e.g. `https://your-api.onrender.com`)
-4. Trigger deploy.
+```text
+ai-industry-dashboard/
+├─ frontend/
+│  ├─ src/
+│  │  ├─ api/                # API client
+│  │  ├─ components/         # Reusable UI components
+│  │  ├─ charts/             # Chart modules
+│  │  ├─ pages/              # Dashboard views (Companies, Domains, Investor Mode, Ask AI, etc.)
+│  │  ├─ hooks/              # Data orchestration hooks
+│  │  └─ utils/              # UI transformation and confidence helpers
+│  └─ test/                  # Frontend smoke tests
+├─ backend/
+│  ├─ src/
+│  │  ├─ api/
+│  │  │  ├─ controllers/     # Request handlers
+│  │  │  └─ routes/          # Route matching and endpoint map
+│  │  ├─ data/               # Seed data, repository and data connector scaffolds
+│  │  ├─ services/           # Domain logic, scoring, ingestion, search, retrieval, ML classification
+│  │  ├─ scripts/            # Validation and sample classification scripts
+│  │  ├─ utils/              # HTTP and query utility helpers
+│  │  └─ server.js           # API bootstrap
+│  └─ test/                  # Integration and service tests
+├─ netlify.toml              # Netlify build config
+└─ README.md
+```
 
-### Post-deploy check
+---
 
-- Open the Netlify site.
-- Confirm dashboard data loads from the Render API.
-- If API calls fail with CORS, verify `CORS_ALLOWED_ORIGINS` exactly matches the frontend origin.
+## Future Improvements
 
-## Security / secrets
+- Embeddings-based retrieval and stronger RAG orchestration for Ask AI
+- Richer external market and funding data integrations
+- Expanded diagnostics, observability, and data lineage tooling
+- More dynamic ingestion connectors beyond static seeds and fixtures
+- Incremental refresh jobs and smarter recency-aware scoring
 
-- Do not commit real `.env` files.
-- Commit only `.env.example` templates.
-- Configure secrets (`HUGGINGFACE_API_KEY`, etc.) only in Render/Netlify environment settings.
+---
 
-## Extension roadmap (already scaffolded by architecture)
+## License
 
-- Replace seed repository with persistent DB adapters.
-- Add ingestion pipeline services for scraping/live source updates.
-- Add ML/NLP classification workers (e.g., Hugging Face models).
-- Add embeddings and vector search service adapters.
-- Add RAG query endpoints on top of insights + company corpus.
-- Add scheduled refresh/score recomputation jobs.
-- Deploy API as serverless functions or containerized microservice.
+Add a license section here if you plan to open source this project publicly.
