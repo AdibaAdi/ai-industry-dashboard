@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "classify:samples": "node src/scripts/classifySamples.js"
+    "classify:samples": "node src/scripts/classifySamples.js",
+    "validate:data": "node src/scripts/validateDataIntegrity.js"
   },
   "dependencies": {
     "dotenv": "^17.3.1"
