@@ -1,4 +1,4 @@
-import { buildYearSeries } from './yearSeries';
+import { buildYearSeries } from './yearSeries.js';
 
 export const toDomainChartData = (domains) => domains.map((item) => ({ name: item.domain, value: item.total_companies }));
 

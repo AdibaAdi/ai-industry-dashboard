@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
-import ConfidenceBadge, { getConfidenceMeta } from './ConfidenceBadge';
+import ConfidenceBadge from './ConfidenceBadge';
+import { getConfidenceMeta } from '../utils/confidence';
 
 const InfoItem = ({ label, value }) => (
   <div className="rounded-lg border border-theme-border bg-theme-surface p-3">
