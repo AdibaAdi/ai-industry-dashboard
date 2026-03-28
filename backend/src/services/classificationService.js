@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 const HUGGING_FACE_MODEL =
   process.env.HUGGINGFACE_MODEL ??
   process.env.HUGGING_FACE_CLASSIFICATION_MODEL ??
