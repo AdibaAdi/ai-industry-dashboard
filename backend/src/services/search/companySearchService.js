@@ -1,6 +1,9 @@
 import { getCompanies } from '../../data/repositories/companyRepository.js';
 import { retrieveHybridCompanySignals } from '../retrieval/hybridCompanyRetrievalService.js';
-import { ensureCompanyVectorIndex, getVectorRetrievalInfo, searchCompanyVectors } from '../vector/vectorStoreService.js';
+import {
+  getSemanticRetrievalInfo,
+  retrieveRelevantCompanyDocuments,
+} from '../retrieval/companySemanticRetrievalService.js';
 
 const SEARCH_LIMIT = 6;
 const RAG_RETRIEVAL_LIMIT = 18;
@@ -359,8 +362,9 @@ const retrieveRagCandidates = async ({ companies, normalizedQuery, explicitCompa
   };
 
   try {
-    await ensureCompanyVectorIndex(companies);
-    const matches = await searchCompanyVectors(normalizedQuery, {
+    const matches = await retrieveRelevantCompanyDocuments({
+      companies,
+      query: normalizedQuery,
       limit: RAG_RETRIEVAL_LIMIT,
       minSimilarity: 0.05,
     });
@@ -761,7 +765,7 @@ export const searchCompanies = async (query) => {
 
   const comparisonAnalysis = intent === INTENTS.COMPANY_COMPARISON ? buildComparisonAnalysis(explicitCompanies) : null;
   const domainRanking = intent === INTENTS.DOMAIN_RANKING || intent === INTENTS.CROWDED_DOMAIN ? buildDomainRankingSummary(companies) : null;
-  const retrievalInfo = getVectorRetrievalInfo();
+  const retrievalInfo = getSemanticRetrievalInfo();
   const ragContext = {
     candidateCount: ragCandidates.length,
     retrievalTrace,

@@ -1,4 +1,4 @@
-import { ensureCompanyVectorIndex, searchCompanyVectors } from '../vector/vectorStoreService.js';
+import { retrieveRelevantCompanyDocuments } from './companySemanticRetrievalService.js';
 
 const normalize = (value) => (typeof value === 'string' ? value.toLowerCase().trim() : '');
 
@@ -42,11 +42,12 @@ export const retrieveHybridCompanySignals = async ({
   let usedSemantic = false;
 
   try {
-    await ensureCompanyVectorIndex(companies);
-    const semanticMatches = await searchCompanyVectors(normalizedQuery, {
+    const semanticMatches = await retrieveRelevantCompanyDocuments({
+      companies,
+      query: normalizedQuery,
       limit: semanticOptions.limit ?? 20,
       minSimilarity: semanticOptions.minSimilarity ?? 0.08,
-      metadataFilter,
+      metadataFilter: metadataFilter ?? {},
     });
     semanticScores = new Map(semanticMatches.map((entry) => [entry.id, entry.score]));
     usedSemantic = semanticMatches.length > 0;
