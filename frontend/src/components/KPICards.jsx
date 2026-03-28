@@ -1,40 +1,10 @@
-const KPICards = ({ kpis, loading }) => {
-  const coverageYear = kpis.freshness?.current_year_coverage?.year;
-  const coverageRecords = kpis.freshness?.current_year_coverage?.covered_records ?? 0;
-  const coveragePct = kpis.freshness?.current_year_coverage?.coverage_pct ?? 0;
-  const topScoreValue = typeof kpis.topScore === 'number' ? Number(kpis.topScore).toFixed(1) : '—';
-  const refreshSummary = `${kpis.freshness?.newly_added_companies ?? 0} new · ${kpis.freshness?.updated_records_count ?? 0} updated`;
-  const coverageSummary =
-    coverageYear && kpis.totalCompanies > 0
-      ? `${coverageYear} coverage ${coverageRecords}/${kpis.totalCompanies} (${coveragePct}%)`
-      : 'Coverage details unavailable';
+import { buildKpiCardModels } from '../utils/dashboardDataBuilder';
 
-  const cards = [
-    {
-      label: 'Total Companies',
-      value: loading ? '…' : kpis.totalCompanies.toLocaleString(),
-      trend: 'Live from intelligence layer',
-      trendClassName: 'text-emerald-400',
-    },
-    {
-      label: 'Top Domain',
-      value: loading ? '…' : kpis.topDomain ?? '—',
-      trend: 'By active company count',
-      trendClassName: 'text-emerald-400',
-    },
-    {
-      label: 'Top Score',
-      value: loading ? '…' : topScoreValue,
-      trend: loading ? '...' : kpis.topCompany ?? '—',
-      trendClassName: 'text-emerald-400',
-    },
-    {
-      label: 'Refresh Status',
-      value: loading ? '…' : refreshSummary,
-      trend: loading ? '...' : coverageSummary,
-      trendClassName: 'text-theme-secondary',
-    },
-  ];
+const KPICards = ({ kpis, loading }) => {
+  const cards = buildKpiCardModels(kpis, loading).map((card) => ({
+    ...card,
+    trendClassName: card.label === 'Refresh Status' ? 'text-theme-secondary' : 'text-emerald-400',
+  }));
 
   return (
     <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

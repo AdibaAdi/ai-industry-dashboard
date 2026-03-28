@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
 import SectionHeading from '../components/SectionHeading';
+import { buildAskAIResultViewModel } from '../utils/dashboardDataBuilder';
 
 const EXAMPLE_PROMPTS = [
   'Which AI agent startups are growing fastest?',
@@ -42,6 +43,7 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate, onOpenCompany }) =
   const [error, setError] = useState(null);
 
   const companyNames = useMemo(() => new Set(companies.map((company) => company.name.toLowerCase())), [companies]);
+  const responseViewModel = useMemo(() => buildAskAIResultViewModel(response), [response]);
 
   const onSubmit = async (event) => {
     event.preventDefault();
@@ -120,9 +122,9 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate, onOpenCompany }) =
         <>
           <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Answer</p>
-            <p className="mt-3 text-sm leading-6 text-theme-secondary">{response.answer}</p>
-            {response.intent ? (
-              <p className="mt-2 text-xs uppercase tracking-[0.12em] text-theme-muted">Intent: {response.intent.replaceAll('_', ' ')}</p>
+            <p className="mt-3 text-sm leading-6 text-theme-secondary">{responseViewModel.answer}</p>
+            {responseViewModel.intentLabel ? (
+              <p className="mt-2 text-xs uppercase tracking-[0.12em] text-theme-muted">Intent: {responseViewModel.intentLabel}</p>
             ) : null}
           </section>
 
@@ -131,12 +133,12 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate, onOpenCompany }) =
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <article className="rounded-xl border border-theme-border bg-theme-surface p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Key finding</h3>
-                <p className="mt-2 text-sm text-theme-secondary">{response.analysis?.key_finding}</p>
+                <p className="mt-2 text-sm text-theme-secondary">{responseViewModel.keyFinding}</p>
               </article>
               <article className="rounded-xl border border-theme-border bg-theme-surface p-4">
                 <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Strongest matching companies</h3>
                 <ul className="mt-2 space-y-1 text-sm text-theme-secondary">
-                  {response.analysis?.strongest_matching_companies?.map((company) => (
+                  {responseViewModel.strongestCompanies.map((company) => (
                     <li key={company.id}>
                       <button
                         type="button"
@@ -189,7 +191,7 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate, onOpenCompany }) =
           <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Ranked relevant companies</p>
             <div className="mt-4 space-y-3">
-              {response.results?.map((result, index) => (
+              {responseViewModel.rankedResults.map((result, index) => (
                 <article key={result.id} className="rounded-xl border border-theme-border bg-theme-surface p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <h3 className="text-sm font-semibold text-theme-primary">
@@ -245,7 +247,7 @@ const AskAIPage = ({ compactMode, companies = [], onNavigate, onOpenCompany }) =
           <section className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
             <p className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">Supporting evidence</p>
             <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-theme-secondary">
-              {response.supporting_snippets?.map((snippet) => (
+              {responseViewModel.supportingSnippets.map((snippet) => (
                 <li key={snippet}>{snippet}</li>
               ))}
             </ul>

@@ -1,19 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
-import {
-  toComparisonData,
-  toDomainChartData,
-  toGrowthTrendData,
-  toTopCompanies,
-} from '../utils/transformers';
+import { buildDashboardDataFromApi } from '../utils/dashboardDataBuilder';
 
 export const useDashboardData = () => {
   const [state, setState] = useState({
-    companies: [],
-    companiesMeta: null,
-    domains: [],
-    insights: null,
-    investorMode: null,
+    ...buildDashboardDataFromApi({
+      companiesResponse: { data: [], meta: null },
+      domainsResponse: { data: [] },
+      insightsResponse: { data: null },
+      investorModeResponse: { data: null },
+    }),
     loading: true,
     error: null,
   });
@@ -35,11 +31,12 @@ export const useDashboardData = () => {
         }
 
         setState({
-          companies: companiesResponse.data,
-          companiesMeta: companiesResponse.meta ?? null,
-          domains: domainsResponse.data,
-          insights: insightsResponse.data,
-          investorMode: investorModeResponse.data,
+          ...buildDashboardDataFromApi({
+            companiesResponse,
+            domainsResponse,
+            insightsResponse,
+            investorModeResponse,
+          }),
           loading: false,
           error: null,
         });
@@ -63,21 +60,5 @@ export const useDashboardData = () => {
     };
   }, []);
 
-  return useMemo(
-    () => ({
-      ...state,
-      domainChartData: toDomainChartData(state.domains),
-      topCompanies: toTopCompanies(state.companies),
-      companyComparisonData: toComparisonData(state.companies),
-      growthTrendData: toGrowthTrendData(state.companies),
-      kpis: {
-        totalCompanies: state.companies.length,
-        topDomain: state.domains[0]?.domain ?? null,
-        topScore: state.companies[0]?.power_score ?? null,
-        topCompany: state.companies[0]?.name ?? null,
-        freshness: state.companiesMeta?.refresh ?? null,
-      },
-    }),
-    [state],
-  );
+  return useMemo(() => ({ ...state }), [state]);
 };

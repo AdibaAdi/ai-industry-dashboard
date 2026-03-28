@@ -1,4 +1,5 @@
 import SectionHeading from '../components/SectionHeading';
+import { buildDomainCardModels } from '../utils/dashboardDataBuilder';
 
 const DomainsPage = ({ compactMode, domains }) => {
   return (
@@ -11,12 +12,12 @@ const DomainsPage = ({ compactMode, domains }) => {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {domains.slice(0, 9).map((domain) => (
-          <article key={domain.domain} className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
-            <h2 className="text-base font-semibold text-theme-primary">{domain.domain}</h2>
+        {buildDomainCardModels(domains).map((domainCard) => (
+          <article key={domainCard.key} className="rounded-2xl border border-theme-border bg-theme-card p-5 shadow-card">
+            <h2 className="text-base font-semibold text-theme-primary">{domainCard.title}</h2>
             <p className="mt-3 text-sm text-theme-muted">Companies tracked</p>
-            <p className="text-2xl font-semibold text-cyan-400">{domain.total_companies}</p>
-            <p className="mt-2 text-sm text-emerald-400">{`${domain.share_percentage.toFixed(1)}% of tracked companies`}</p>
+            <p className="text-2xl font-semibold text-cyan-400">{domainCard.totalCompanies}</p>
+            <p className="mt-2 text-sm text-emerald-400">{domainCard.shareLabel}</p>
           </article>
         ))}
       </section>
