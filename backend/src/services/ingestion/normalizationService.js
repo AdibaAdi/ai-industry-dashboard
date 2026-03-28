@@ -55,6 +55,11 @@ export const normalizeCompanyRecord = (rawCompany) => {
     updated_at: String(rawCompany.updated_at ?? now),
     ingestion_status: 'normalized',
     confidence_score: Number(toNumeric(rawCompany.confidence_score, 0.7).toFixed(2)),
+    predicted_domain: String(rawCompany.predicted_domain ?? '').trim(),
+    predicted_subdomain: String(rawCompany.predicted_subdomain ?? '').trim(),
+    classification_confidence: Number(toNumeric(rawCompany.classification_confidence, 0).toFixed(2)),
+    classification_source: String(rawCompany.classification_source ?? '').trim(),
+    classification_provider: String(rawCompany.classification_provider ?? '').trim(),
     data_source: String(rawCompany.data_source ?? 'manual').trim(),
   };
 };

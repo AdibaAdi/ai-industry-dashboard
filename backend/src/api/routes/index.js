@@ -1,3 +1,4 @@
+import { postClassifyPreviewHandler } from '../controllers/classificationController.js';
 import { getCompaniesHandler, getCompanyByIdHandler } from '../controllers/companyController.js';
 import { getDomainsHandler } from '../controllers/domainController.js';
 import { postIngestCompaniesHandler, postSimulateIngestionHandler } from '../controllers/ingestionController.js';
@@ -17,6 +18,7 @@ const routes = [
   { method: 'GET', path: '/search', handler: getSearchHandler },
   { method: 'POST', path: '/search', handler: postSearchHandler },
   { method: 'POST', path: '/dev/ingestion', handler: postIngestCompaniesHandler },
+  { method: 'POST', path: '/dev/classification/preview', handler: postClassifyPreviewHandler },
   { method: 'POST', path: '/dev/ingestion/simulate', handler: postSimulateIngestionHandler },
 ];
 
