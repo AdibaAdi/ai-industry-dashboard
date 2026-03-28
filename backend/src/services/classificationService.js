@@ -192,12 +192,28 @@ const createHuggingFaceZeroShotProvider = () => ({
       }
 
       const payload = await response.json();
-      const label = payload?.labels?.[0];
-      const confidence = payload?.scores?.[0];
+
+      let labels;
+      let scores;
+
+      if (Array.isArray(payload?.labels) && Array.isArray(payload?.scores)) {
+        labels = payload.labels;
+        scores = payload.scores;
+      } else if (Array.isArray(payload)) {
+        labels = payload.map((entry) => entry?.label);
+        scores = payload.map((entry) => entry?.score);
+      } else {
+        throw new Error('Invalid HF response format');
+      }
+
+      const label = labels?.[0];
+      const confidence = scores?.[0];
 
       if (!label || typeof confidence !== 'number') {
-        throw new Error(`Unexpected Hugging Face response payload: ${JSON.stringify(payload)}`);
+        throw new Error('Invalid HF response format');
       }
+
+      console.log('HF parsed:', label, confidence);
 
       return { label, confidence };
     };
