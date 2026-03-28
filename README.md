@@ -82,17 +82,31 @@ cd backend
 npm run start
 ```
 
-### 2) Start frontend
+### 2) Configure frontend API URL
+
+Create a frontend env file from the example:
+
+```bash
+cd frontend
+cp .env.example .env
+```
+
+Set the API base URL in `frontend/.env`:
+
+```bash
+VITE_API_BASE_URL=http://localhost:4000
+```
+
+Notes:
+- The frontend API client reads `import.meta.env.VITE_API_BASE_URL` for all API requests.
+- In local development (`npm run dev`), the client falls back to `http://localhost:4000` only when `VITE_API_BASE_URL` is not set.
+- In non-dev builds, no localhost fallback is used, so deployments should always set `VITE_API_BASE_URL`.
+
+### 3) Start frontend
 
 ```bash
 cd frontend
 npm run dev
-```
-
-If your API runs on a non-default URL, set:
-
-```bash
-VITE_API_BASE_URL=https://your-api-host
 ```
 
 ## Extension roadmap (already scaffolded by architecture)

@@ -1,4 +1,35 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
+const DEFAULT_DEV_API_BASE_URL = 'http://localhost:4000';
+
+const normalizeBaseUrl = (value) => value.replace(/\/$/, '');
+
+const resolveApiBaseUrl = () => {
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+
+  if (configuredBaseUrl) {
+    return normalizeBaseUrl(configuredBaseUrl);
+  }
+
+  if (import.meta.env.DEV) {
+    return DEFAULT_DEV_API_BASE_URL;
+  }
+
+  return '';
+};
+
+const API_BASE_URL = resolveApiBaseUrl();
+
+const buildApiUrl = (path, queryParams) => {
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const url = `${API_BASE_URL}${normalizedPath}`;
+
+  if (queryParams) {
+    const params = new URLSearchParams(queryParams);
+    const queryString = params.toString();
+    return queryString ? `${url}?${queryString}` : url;
+  }
+
+  return url;
+};
 
 const parseJson = async (response) => {
   if (!response.ok) {
@@ -17,42 +48,39 @@ const parseJson = async (response) => {
   return response.json();
 };
 
+const requestJson = async (path, queryParams) => {
+  const response = await fetch(buildApiUrl(path, queryParams));
+  return parseJson(response);
+};
+
 export const apiClient = {
   async getCompanies() {
-    const response = await fetch(`${API_BASE_URL}/companies`);
-    return parseJson(response);
+    return requestJson('/companies');
   },
 
   async getCompanyById(companyId) {
-    const response = await fetch(`${API_BASE_URL}/companies/${companyId}`);
-    const payload = await parseJson(response);
+    const payload = await requestJson(`/companies/${companyId}`);
     return payload.data;
   },
 
   async getDomains() {
-    const response = await fetch(`${API_BASE_URL}/domains`);
-    return parseJson(response);
+    return requestJson('/domains');
   },
 
   async getInsights() {
-    const response = await fetch(`${API_BASE_URL}/insights`);
-    return parseJson(response);
+    return requestJson('/insights');
   },
 
   async getInvestorMode() {
-    const response = await fetch(`${API_BASE_URL}/investor-mode`);
-    return parseJson(response);
+    return requestJson('/investor-mode');
   },
 
   async searchCompanies(query) {
-    const params = new URLSearchParams({ q: query });
-    const response = await fetch(`${API_BASE_URL}/search?${params.toString()}`);
-    return parseJson(response);
+    return requestJson('/search', { q: query });
   },
 
   async getCompanyInsight(companyId) {
-    const response = await fetch(`${API_BASE_URL}/companies/${companyId}/insight`);
-    const payload = await parseJson(response);
+    const payload = await requestJson(`/companies/${companyId}/insight`);
     return payload.data;
   },
 };
