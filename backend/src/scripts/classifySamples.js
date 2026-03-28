@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { classifyCompanyRecords } from '../services/classificationService.js';
 
 const sampleCompanies = [
