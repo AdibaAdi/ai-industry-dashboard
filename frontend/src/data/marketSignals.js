@@ -61,12 +61,21 @@ export const getMarketSignalForCompany = (companyId) => {
 
 export const getPublicMarketCompanies = (companies = []) =>
   companies
-    .filter((company) => company.company_type === 'Public')
     .map((company) => ({
       ...company,
       marketSignal: getMarketSignalForCompany(company.id),
     }))
+    .filter((company) => Boolean(company.marketSignal?.ticker))
     .sort((a, b) => (b.marketSignal?.marketCapBillions ?? 0) - (a.marketSignal?.marketCapBillions ?? 0));
+
+export const getPrivateMarketCompanies = (companies = []) =>
+  companies
+    .map((company) => ({
+      ...company,
+      marketSignal: getMarketSignalForCompany(company.id),
+    }))
+    .filter((company) => company.company_type === 'Private' && !company.marketSignal?.ticker)
+    .sort((a, b) => (b.valuation ?? 0) - (a.valuation ?? 0));
 
 export const getMarketFeedMeta = () => ({
   source: MOCK_PUBLIC_MARKET_FEED.source,
