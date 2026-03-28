@@ -349,7 +349,7 @@ const uniqueCompaniesById = (companies) => {
   });
 };
 
-const retrieveRagCandidates = ({ companies, normalizedQuery, explicitCompanies, explicitDomainTerms }) => {
+const retrieveRagCandidates = async ({ companies, normalizedQuery, explicitCompanies, explicitDomainTerms }) => {
   const byId = new Map(companies.map((company) => [company.id, company]));
   const retrievalTrace = {
     method: 'embedding_similarity',
@@ -359,8 +359,8 @@ const retrieveRagCandidates = ({ companies, normalizedQuery, explicitCompanies, 
   };
 
   try {
-    ensureCompanyVectorIndex(companies);
-    const matches = searchCompanyVectors(normalizedQuery, {
+    await ensureCompanyVectorIndex(companies);
+    const matches = await searchCompanyVectors(normalizedQuery, {
       limit: RAG_RETRIEVAL_LIMIT,
       minSimilarity: 0.05,
     });
@@ -559,10 +559,10 @@ const applyLowRelevanceFilter = (rankedEntries, { explicitCompanies }) => {
   return filtered.length ? filtered : rankedEntries.slice(0, Math.min(3, rankedEntries.length));
 };
 
-const rankGeneralResults = ({ companies, normalizedQuery, matchTokens, explicitCompanies, explicitDomainTerms }) => {
+const rankGeneralResults = async ({ companies, normalizedQuery, matchTokens, explicitCompanies, explicitDomainTerms }) => {
   const metadataFilter = explicitDomainTerms.length ? { tags: explicitDomainTerms } : {};
 
-  const hybridSignals = retrieveHybridCompanySignals({
+  const hybridSignals = await retrieveHybridCompanySignals({
     companies,
     query: normalizedQuery,
     metadataFilter,
@@ -684,7 +684,7 @@ const rankCompetitors = ({ companies, anchorCompany }) => {
   return ranked.map((entry) => ({ ...entry, relevance_score: toRelevanceScore(entry.score, topScore) }));
 };
 
-export const searchCompanies = (query) => {
+export const searchCompanies = async (query) => {
   const normalizedQuery = typeof query === 'string' ? query.trim() : '';
 
   if (!normalizedQuery) {
@@ -704,7 +704,7 @@ export const searchCompanies = (query) => {
   const explicitDomainTerms = effectiveTokens.filter((token) => DOMAIN_VOCABULARY.has(token));
   const explicitCompanies = extractExplicitCompanies(normalizedLower, companies);
   const intent = detectIntent(normalizedLower);
-  const { candidates: ragCandidates, retrievalTrace } = retrieveRagCandidates({
+  const { candidates: ragCandidates, retrievalTrace } = await retrieveRagCandidates({
     companies,
     normalizedQuery: normalizedLower,
     explicitCompanies,
@@ -741,7 +741,7 @@ export const searchCompanies = (query) => {
     });
 
     if (!rankedResults.length) {
-      rankedResults = rankGeneralResults({
+      rankedResults = await rankGeneralResults({
         companies: ragCandidates.length ? ragCandidates : companies,
         normalizedQuery: normalizedLower,
         matchTokens: effectiveTokens,
@@ -750,7 +750,7 @@ export const searchCompanies = (query) => {
       });
     }
   } else {
-    rankedResults = rankGeneralResults({
+    rankedResults = await rankGeneralResults({
       companies: ragCandidates.length ? ragCandidates : companies,
       normalizedQuery: normalizedLower,
       matchTokens: effectiveTokens,

@@ -1,4 +1,4 @@
-import { createEmbeddingService } from '../embeddings/embeddingService.js';
+import { createEmbeddingService } from '../embeddingService.js';
 import { buildCompanyDocuments } from '../retrieval/companyDocumentBuilder.js';
 import { createInMemoryVectorStore } from './inMemoryVectorStore.js';
 
@@ -14,39 +14,56 @@ const vectorStore = createVectorStore();
 const embeddingService = createEmbeddingService();
 
 let indexedSignature = null;
+let indexingPromise = null;
 
 const buildSignature = (companies) => companies.map((company) => `${company.id}:${company.last_updated}`).join('|');
 
-export const ensureCompanyVectorIndex = (companies) => {
+export const ensureCompanyVectorIndex = async (companies) => {
   const signature = buildSignature(companies);
 
   if (signature === indexedSignature) {
     return;
   }
 
-  const documents = buildCompanyDocuments(companies);
-  const vectors = embeddingService.embedBatch(documents.map((document) => document.text));
+  if (indexingPromise) {
+    await indexingPromise;
+    if (signature === indexedSignature) {
+      return;
+    }
+  }
 
-  vectorStore.clear();
-  vectorStore.upsert(
-    documents.map((document, index) => ({
-      id: document.id,
-      vector: vectors[index],
-      document,
-      metadata: document.metadata,
-    })),
-  );
+  indexingPromise = (async () => {
+    const documents = buildCompanyDocuments(companies);
+    const vectors = await embeddingService.embedBatch(documents.map((document) => document.text));
 
-  indexedSignature = signature;
+    vectorStore.clear();
+    vectorStore.upsert(
+      documents.map((document, index) => ({
+        id: document.id,
+        vector: vectors[index],
+        document,
+        metadata: document.metadata,
+      })),
+    );
+
+    indexedSignature = signature;
+  })();
+
+  try {
+    await indexingPromise;
+  } finally {
+    indexingPromise = null;
+  }
 };
 
-export const searchCompanyVectors = (query, options = {}) => {
-  const queryVector = embeddingService.embedText(query);
+export const searchCompanyVectors = async (query, options = {}) => {
+  const queryVector = await embeddingService.embedText(query);
   return vectorStore.searchByVector(queryVector, options);
 };
 
 export const getVectorRetrievalInfo = () => ({
   provider: embeddingService.provider,
+  model: embeddingService.model,
   dimensions: embeddingService.dimensions,
   indexed: indexedSignature !== null,
 });
