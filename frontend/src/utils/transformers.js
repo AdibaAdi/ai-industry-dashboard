@@ -1,6 +1,12 @@
 import { buildYearSeries } from './yearSeries.js';
 
-export const toDomainChartData = (domains) => domains.map((item) => ({ name: item.domain, value: item.total_companies }));
+export const toDomainChartData = (domains) =>
+  domains.map((item) => ({
+    name: item.domain,
+    value: item.total_companies,
+    sharePercentage: item.share_percentage,
+    shareLabel: item.share,
+  }));
 
 export const toTopCompanies = (companies, count = 6) =>
   [...companies]

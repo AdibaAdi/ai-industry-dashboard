@@ -13,11 +13,15 @@ export const buildDashboardDataFromApi = ({
 }) => {
   const companies = companiesResponse?.data ?? [];
   const domains = domainsResponse?.data ?? [];
+  const domainsMeta = domainsResponse?.meta ?? null;
+  const domainWarnings = domainsResponse?.warnings ?? [];
 
   return {
     companies,
     companiesMeta: companiesResponse?.meta ?? null,
     domains,
+    domainsMeta,
+    domainWarnings,
     insights: insightsResponse?.data ?? null,
     investorMode: investorModeResponse?.data ?? null,
     domainChartData: toDomainChartData(domains),

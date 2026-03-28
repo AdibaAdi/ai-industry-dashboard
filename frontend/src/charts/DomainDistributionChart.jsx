@@ -10,6 +10,7 @@ const DomainTooltipContent = ({ active, payload, coordinate, viewBox }) => {
   const [entry] = payload;
   const label = entry?.name ?? '';
   const value = entry?.value ?? 0;
+  const shareLabel = entry?.payload?.shareLabel ?? '—';
   const color = entry?.color ?? '#00E5FF';
 
   const centerX = (viewBox?.x ?? 0) + (viewBox?.width ?? 0) / 2;
@@ -35,6 +36,7 @@ const DomainTooltipContent = ({ active, payload, coordinate, viewBox }) => {
           <span className="text-sm font-medium text-theme-secondary">{label}</span>
         </div>
         <div className="text-base font-semibold text-theme-primary">{value} companies</div>
+        <div className="text-xs text-theme-muted">{shareLabel} of tracked companies</div>
       </div>
     </div>
   );
@@ -114,7 +116,7 @@ const DomainDistributionChart = ({ chartAnimations, domainData }) => {
           <div key={domain.name} className="flex items-center gap-2 text-theme-secondary">
             <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
             <span>{domain.name}</span>
-            <span className="ml-auto text-theme-muted">{domain.value}</span>
+            <span className="ml-auto text-theme-muted">{domain.value} ({domain.shareLabel})</span>
           </div>
         ))}
       </div>
