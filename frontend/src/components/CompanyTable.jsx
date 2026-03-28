@@ -37,7 +37,9 @@ const CompanyTable = ({ companies, onViewAll, onOpenCompany }) => {
                 <td className="py-3 font-medium text-theme-primary">{company.name}</td>
                 <td className="py-3">{company.domain}</td>
                 <td className="py-3">{company.score.toFixed(1)}</td>
-                <td className="py-3 text-emerald-400">{company.growth}</td>
+                <td className="py-3 text-emerald-400">
+                  {typeof company.growth_score === 'number' ? company.growth_score.toFixed(1) : 'N/A'}
+                </td>
                 <td className="py-3">
                   <ConfidenceBadge
                     score={company.confidence_score}

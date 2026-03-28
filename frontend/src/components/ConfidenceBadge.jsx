@@ -20,6 +20,15 @@ const confidenceBands = {
 };
 
 export const getConfidenceMeta = (score = 0) => {
+  if (!Number.isFinite(score)) {
+    return {
+      label: 'Unknown',
+      colorClass: 'text-theme-secondary border-theme-border bg-theme-surface',
+      dotClass: 'bg-theme-muted',
+      explanation: 'Confidence data is not available for this record yet.',
+    };
+  }
+
   if (score >= 0.8) return confidenceBands.high;
   if (score >= 0.5) return confidenceBands.medium;
   return confidenceBands.low;
@@ -40,7 +49,7 @@ const formatDate = (value) => {
   });
 };
 
-const ConfidenceBadge = ({ score = 0, sources = [], lastUpdated, compact = false }) => {
+const ConfidenceBadge = ({ score, sources = [], lastUpdated, compact = false }) => {
   const meta = getConfidenceMeta(score);
   const tooltip = [
     `Data Sources: ${sources.length ? sources.join(', ') : 'Not available'}`,

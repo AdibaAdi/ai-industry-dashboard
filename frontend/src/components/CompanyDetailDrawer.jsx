@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
-import { getMarketSignalForCompany } from '../data/marketSignals';
 import ConfidenceBadge, { getConfidenceMeta } from './ConfidenceBadge';
 
 const InfoItem = ({ label, value }) => (
@@ -17,17 +16,15 @@ const scoreColor = {
 };
 
 const getPublicTickerStatus = (company) => {
-  const marketSignal = getMarketSignalForCompany(company.id);
-
   if (company.company_type === 'Public') {
-    return marketSignal?.ticker ? `Public · ${marketSignal.ticker}` : 'Public · No public ticker';
+    return 'Public company';
   }
 
   if (company.company_type === 'Private') {
-    return 'Private · No public ticker';
+    return 'Private company';
   }
 
-  return `${company.company_type} · No public ticker`;
+  return company.company_type;
 };
 
 const CompanyDetailDrawer = ({ companyId, contextLabel, onClose, onNavigateCompanies }) => {
